@@ -245,7 +245,6 @@ Public String getPagelayoutId(String pgName){
             return pagLayoutId ;
 }
 
-
     public List<String> getPageLayoutName(String objName){
         List<String> layoutLst =  new List<String>();
         orgAuthentication();
