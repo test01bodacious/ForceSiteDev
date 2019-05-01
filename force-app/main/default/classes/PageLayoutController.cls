@@ -242,7 +242,7 @@ Public String getPagelayoutId(String pgName){
          Apexpages.addMessage(new apexpages.message(Apexpages.Severity.ERROR, e.getMessage() + '   ' + e.getLineNumber()));
     }
     System.debug(pagLayoutId);
-            return pagLayoutId ;
+    return pagLayoutId ;
 }
 
     public List<String> getPageLayoutName(String objName){
