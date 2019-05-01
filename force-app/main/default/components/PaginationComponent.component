@@ -1,0 +1,374 @@
+<apex:component controller="PaginationComponentController" allowDML="true">
+    <apex:attribute name="profile" type="String" description="The profile of the user" required="false" assignTo="{!profileName}"/>
+    <apex:attribute name="objectName" type="String" description="The name of the object" required="true" assignTo="{!objName}"/>
+    <apex:attribute name="typeOfQuery" type="String" description="The type of query SOQL or SOSL for an Object" required="true" assignTo="{!queryType}"/>
+    <apex:attribute name="recordquery" type="String" description="The query to be executed" required="true" assignTo="{!query}"/>
+    <apex:attribute name="fieldList" type="String[]" description="The list of fields" required="true" assignTo="{!fieldLst}"/>
+    <apex:attribute name="QLimit" type="Integer" description="The limit of total records" required="false" assignTo="{!QUERY_LIMIT}" default="10000"/>
+    <apex:attribute name="initPageSize" type="Integer" description="The intial Page Size" required="false" assignTo="{!initialPageSize}" default="10"/>
+    
+    <apex:includeScript value="{!$Resource.JQuery}"/>  
+    
+    <apex:includeScript value="{!URLFOR($Resource.tableHeadFixer, 'jQuery-Plugin-For-Fixed-Table-Header-Footer-Columns-TableHeadFixer/tableHeadFixer.js')}"/>      
+    <apex:outputPanel rendered="{!recordList.Size == 0}" id="NoRecordMsg">
+        <apex:pageMessages id="PgMsg"/><br/><br/>
+        <font size="4"> &nbsp;&nbsp;No Records Found :( </font>
+    </apex:outputPanel>
+    
+    <apex:outputPanel layout="block" id="createnewpanel" style="text-align:center;" >
+        <br/><br/>
+        <apex:commandButton value="Create New"  action="{!CreateNew}" status="Lightning_Spinner" reRender="createnewpanel" style="color:black;width:120px;margin:5px; background:#fafaf9; text-decoration:none;"
+                            styleClass="commoncss"/>
+        <c:CreateRecordComponent objectName="{!objName}" RecordId="NA" rendered="{!customUser['isCreate__c']}" />
+    </apex:outputPanel>
+    
+    <apex:pageBlockSection columns="1" id="RecordList" rendered="{!AND(recordList.Size > 0, true)}">
+        <apex:inlineEditSupport />
+        <apex:pageMessages id="PgMsg" escape="false"/>
+        <p id="ErrorMsg" style="color:red;"/>
+        <apex:outputPanel layout="block" style="position:relative;">
+            <apex:actionStatus id="Lightning_Spinner">
+                <apex:facet name="start">
+                    <c:LightningSpinner />
+                </apex:facet>
+            </apex:actionStatus>
+            <apex:outputPanel layout="block" style="overflow:auto !Important; width: 100%; " styleClass="outputpanelclass">
+                <style>
+                    .RecordChangedStyleClass{
+                    color:blue;
+                    }
+                </style>
+                <script>
+                checkForHighlights('checkBox');
+                function checkForHighlights(cbid)  
+                {  
+                    try{
+                        var inputElem = document.getElementsByTagName("input");  
+                        var count = parseInt(document.getElementById("CheckedSize").innerHTML);
+                        for(var i=0; i<inputElem.length; i++)  
+                        {   
+                            var index = inputElem[i].id.indexOf(cbid);         
+                            if(index != -1){  
+                                if(inputElem[i].checked){
+                                    ((inputElem[i]).parentElement).parentElement.style.backgroundColor = '{!$Label.RowSelect}';
+                                }else{
+                                    ((inputElem[i]).parentElement).parentElement.style.backgroundColor = null;
+                                }
+                            }
+                        }  
+                    }catch(err){
+                        //document.getElementById("ErrorMsg").innerHTML = err.message;
+                    }
+                }  
+                </script>
+                <apex:pageBlockTable value="{!recordList}" var="rec" id="RecordTable" onrowmouseover="this.classList.remove('highlight')" style="padding-right:20px;">  
+                    <apex:column width="2%">  
+                        <apex:facet name="header">  
+                            <apex:outputPanel layout="block" id="selectedTotalPanel">
+                                <apex:inputCheckbox onclick="checkAll(this,'checkBox')" value="{!isSelectAll}"
+                                                    id="checkAllBox" style="vertical-align:middle;"/>
+                                <label for="checkAllBox" style="color:green;font-weight:bold;font-size:12px;" id="CheckedSize">{!selectedTotal}</label>
+                            </apex:outputPanel>
+                        </apex:facet>  
+                        <apex:inputCheckbox value="{!rec.isSelected}" id="checkBox" onclick="countCheck(this, 'checkAllBox', 'checkBox')"/>
+                    </apex:column>
+                    <apex:column width="2%" headerValue="Details" > 
+                        <apex:commandButton value="Open" image="{!$Resource.OpenRecord}" onclick="setVariable('{!rec.Record['id']}');"
+                                            action="{!showRelatedList}" style="border:none !important; border-radius: 50% !important;height:18px !important; width:18px !important;background-size: cover !important;outline:none;"/>
+                        
+                        <apex:inputHidden id="hdnVariable" value="{!recId}"/>
+                        <script>
+                        function setVariable(recordId){
+                            document.getElementById('{!$Component.hdnVariable}').value = recordId;
+                        }
+                        </script>
+                    </apex:column>
+                    
+                    <apex:repeat value="{!permittedfieldList}" var="fld">
+                        
+                        <apex:column width="10%" rendered="{!AND(accessibility1.fieldAccessibility[fld.fieldNameWithoutNamespace].hasReadAccess, true)}" >
+                            <apex:facet name="header">
+                                <apex:outputPanel >
+                                    <apex:commandLink action="{!sortData}"
+                                                      value="{!$ObjectType[objName].Fields[fld.fieldNameWithoutNamespace].Label} {!IF(sortExpression==fld.fieldNameWithoutNamespace,IF(sortDirection='ASC','▼','▲'),'')}"
+                                                      id="cmdSort" reRender="RecordList" status="Lightning_Spinner" onclick="setSortExpression('{!fld.fieldNameWithoutNamespace}');" oncomplete="setSortExpression('');">
+                                        <!--apex:param value="{!fld}" name="{!('Column' + fld)}" assignTo="{!sortExpression}"/-->
+                                    </apex:commandLink>
+                                    <apex:inputHidden id="hdnSortExpression" value="{!sortExpression}" />
+                                    <script>
+                                    function setSortExpression(fldName){
+                                        try{
+                                            document.getElementById('{!$Component.hdnSortExpression}').value = fldName;
+                                        }catch(err){
+                                            document.getElementById('ErrorMsg').innerHTML = err.message;
+                                        }
+                                    }
+                                    </script>
+                                </apex:outputPanel>
+                            </apex:facet>
+                            <apex:outputfield value="{!rec.dummyRecord[fld.fieldNameWithoutNamespace]}" id="inputData" rendered="{!accessibility1.fieldAccessibility[fld.fieldNameWithoutNamespace].hasEditAccess}" />
+                            <apex:outputtext value="{!rec.dummyRecord[fld.fieldNameWithoutNamespace]}" id="inputData1" rendered="{!!accessibility1.fieldAccessibility[fld.fieldNameWithoutNamespace].hasEditAccess}" />
+                        </apex:column>
+                    </apex:repeat>
+                    <apex:column width="10%" rendered="{!OR(objName = 'task__c', objName = 'event__c')}" >
+                        <apex:facet name="header">
+                            <apex:outputPanel >
+                                <apex:commandLink action="{!sortData}"
+                                                  value="Related To"
+                                                  id="cmdSort12" reRender="RecordList" status="Lightning_Spinner" >
+                                    
+                                </apex:commandLink>
+                                <apex:inputHidden id="hdnSortExpression12" value="{!sortExpression}" />
+                                <script>
+                                function setSortExpression12(fldName){
+                                    try{
+                                        document.getElementById('{!$Component.hdnSortExpression12}').value = fldName;
+                                    }catch(err){
+                                        document.getElementById('ErrorMsg').innerHTML = err.message;
+                                    }
+                                }
+                                </script>
+                            </apex:outputPanel>
+                        </apex:facet>
+                        <apex:repeat value="{!taskRelatedObjList.taskRelatedObject}" var="taskFld" rendered="{!OR(objName = 'task__c', objName = 'event__c')}">
+                            <apex:outputfield value="{!rec.dummyRecord[taskFld]}" id="inputData12" rendered="{!!ISNULL(rec.dummyRecord[taskFld])}" />
+                            <!-- <apex:outputtext value="{!rec.dummyRecord[taskFld]}" id="inputData112" rendered="{!!accessibility1.fieldAccessibility[fld.fieldNameWithoutNamespace].hasEditAccess}" /> -->
+                        </apex:repeat>
+                    </apex:column>
+                </apex:pageBlockTable>
+            </apex:outputPanel>
+        </apex:outputPanel>
+        <apex:panelGrid columns="3" width="100%" columnClasses="col1,col2,col3">
+            <apex:outputPanel layout="block" style="float:left;">
+                Page {!PageNumber} of {!CEILING(resultSize/pageSize)}
+            </apex:outputPanel>
+            <apex:outputPanel layout="block">
+                <center>
+                    <apex:variable value="pointer-events:none;cursor:default;color:#b6b6b6 !important;" var="disabledLink"/>
+                    <apex:panelGrid columns="6">
+                        <apex:commandLink value="◄◄" action="{!first}" reRender="RecordList" styleClass="previousLinkClass" status="Lightning_Spinner" oncomplete="checkCheckAll('checkAllBox', 'checkBox');"/>
+                        <apex:commandLink value="◄Previous" action="{!previous}" style="text-decoration:none;" reRender="RecordList" styleClass="previousLinkClass" status="Lightning_Spinner" oncomplete="checkCheckAll('checkAllBox', 'checkBox');"/>
+                        <apex:selectList value="{!pageSize}" size="1">
+                            <apex:actionSupport event="onchange" reRender="RecordList" status="Lightning_Spinner" action="{!init}" oncomplete="checkCheckAll('checkAllBox', 'checkBox');"/>
+                            <apex:selectOption itemValue="{!initialPageSize}" itemLabel="{!initialPageSize}" rendered="{!AND(initialPageSize != 10, initialPageSize != 20, initialPageSize != 30, initialPageSize != 40, initialPageSize != 50)}"/>
+                            <apex:selectOption itemValue="10" itemLabel="10"/>
+                            <apex:selectOption itemValue="20" itemLabel="20"/>
+                            <apex:selectOption itemValue="30" itemLabel="30"/>
+                            <apex:selectOption itemValue="40" itemLabel="40"/>
+                            <apex:selectOption itemValue="50" itemLabel="50"/>
+                        </apex:selectList>
+                        <apex:commandLink value="Next►" action="{!next}" style="text-decoration:none;" reRender="RecordList" styleClass="nextLinkClass" status="Lightning_Spinner" oncomplete="checkCheckAll('checkAllBox', 'checkBox');"/>
+                        <apex:commandLink value="►►" action="{!last}" style="text-decoration:none;" reRender="RecordList" styleClass="nextLinkClass" status="Lightning_Spinner" />
+                    </apex:panelGrid>
+                    <style>
+                        .previousLinkClass{
+                        text-decoration:none !important;
+                        {!IF(hasPrevious, '', disabledLink)}
+                        }
+                        .nextLinkClass{
+                        text-decoration:none !important;
+                        {!IF(hasNext, '', disabledLink)}
+                        }
+                    </style><br/><br/><br/>
+                </center>
+            </apex:outputPanel>
+            <apex:outputPanel layout="block" style="float:right;padding-right:20px;">
+                <apex:variable value="{!(pageNumber*pageSize)}" var="p"/>
+                {!p+1-pageSize} - {!IF(p > resultSize, resultSize, p)} of {!resultSize}               
+            </apex:outputPanel>
+        </apex:panelGrid>
+        <style>
+            .coi1{
+            width:10%;                  
+            }
+            .col2{
+            width:80%;
+            }
+            .col3{
+            width:10%;
+            }
+
+            .btn{
+                color:black;
+                width:120px;
+                margin:5px; 
+                background:#fafaf9; 
+                text-decoration:none;
+            }
+            .outputpanelclass{
+                max-height: 525px;
+            }
+            @media screen and (max-height: 600px) {
+                .outputpanelclass{
+                    max-height: 300px;
+                    
+                }
+
+
+            }
+        </style>
+        <script>
+         console.log('hello',event);
+        var $j = jQuery.noConflict();
+        $j(document).ready(function() {
+            try{
+                $j('[id$="RecordTable"]').tableHeadFixer();
+            }catch(err){
+                //document.getElementById('ErrorMsg').innerHTML = err.message;
+            }
+            $j('[id$="inputData"]').change(function(e) {
+                try{
+                    var id = e.target.id;
+                
+                    var searchElement = 'RecordTable_';
+                    var i = id.search(searchElement);
+                    i = i + searchElement.length;
+                    var index ;
+                    var lengthVar = parseInt(id.substring( id.search(searchElement) + searchElement.length, id.search(searchElement) + searchElement.length +2));
+                         index = id.substring(i, i+ lengthVar.toString().length);
+                    var checkId = (id.substring(0, i) + index + '_checkBox');
+                    
+                    checkId = checkId.replace(new RegExp('_', 'g'), ':');
+                    
+                    checkId = checkId.replace(new RegExp('j:id', 'g'), 'j_id');
+                   
+                    var cb = document.getElementById(checkId);
+                    if(!cb.checked){
+                        cb.checked = true;
+                        countCheck(cb, 'checkAllBox', 'checkBox')
+                    }
+                }catch(err){
+                    document.getElementById('ErrorMsg').innerHTML = err.message;
+                }
+            });           
+        });  
+        </script>
+        <apex:outputpanel >
+            <center>
+                <apex:commandButton value="Create Task" action="{!createtask}" 
+                                    styleClass="commoncss btn" rendered="{!!IF($CurrentPage.Parameters.recid !=null, true, IF(objName = 'task__c', true, false))}" reRender="RecordList" status="Lightning_Spinner" onclick="getPermissionForEvent()">
+                    <apex:param value="task__c" name="task__c" assignTo="{!taskEventObj}"/>
+                </apex:commandButton>
+                <apex:commandButton value="Create Event" action="{!createtask}" 
+                                    styleClass="commoncss btn" rendered="{!!IF($CurrentPage.Parameters.recid !=null, true, false)}" reRender="RecordList" status="Lightning_Spinner" onclick="getPermissionForEvent()">
+                    <apex:param value="event__c" name="event__c" assignTo="{!taskEventObj}"/>
+                </apex:commandButton>
+                <apex:commandButton value="update" action="{!updateRecords}"
+                                    styleClass="commoncss btn" rendered="{!!IF($CurrentPage.Parameters.recid !=null, true, false)}" reRender="RecordList" status="Lightning_Spinner" onclick="getPermissionForEvent()"/>
+                <apex:commandButton value="Delete" action="{!deleteRecords}" 
+                                    styleClass="commoncss btn" rendered="{!!IF($CurrentPage.Parameters.recid !=null, true, false)}" reRender="RecordList" status="Lightning_Spinner" onclick="getPermissionForEvent()"/>
+            </center>
+        </apex:outputpanel>
+        <apex:outputPanel layout="block" rendered="{!customUser['isTask__C']}">
+            <c:createTaskAndEventComponent objectName="{!taskEventObj}" records="{!recordIdLst}" />
+            <!-- <c:CreateRecordComponent objectName="{!taskEventObj}" RecordId="NA" recordListId="{!recordIdLst}" /> -->
+        </apex:outputPanel>
+    </apex:pageBlockSection>
+    
+    <apex:inputHidden id="hdnSelectedTotal" value="{!selectedTotal}"/>
+    <script>
+    function getPermissionForEvent(){
+        var count = parseInt(document.getElementById("CheckedSize").innerHTML);
+        if(count > 0)
+            return true;
+        else{
+            alert('Please select records.');
+            return false;
+        }
+    }
+    function checkAll(cb,cbid)  
+    {  
+        try{
+            var inputElem = document.getElementsByTagName("input");  
+            var count = parseInt(document.getElementById("CheckedSize").innerHTML);
+            for(var i=0; i<inputElem.length; i++)  
+            {   
+                var index = inputElem[i].id.indexOf(cbid);         
+                if(index != -1){
+                    var prevCheck = inputElem[i].checked;
+                    inputElem[i].checked = cb.checked;  
+                    if(cb.checked){
+                        ((inputElem[i]).parentElement).parentElement.style.backgroundColor = '{!$Label.RowSelect}';
+                    }else{
+                        ((inputElem[i]).parentElement).parentElement.style.backgroundColor = null;
+                    }
+                    if(!prevCheck && cb.checked){
+                        count++;
+                    }else if(prevCheck && !cb.checked){
+                        count--;
+                    }
+                }
+            }  
+            document.getElementById("CheckedSize").innerHTML = count;
+            document.getElementById("{!$Component.hdnSelectedTotal}").value = count;
+        }catch(err){
+            document.getElementById("ErrorMsg").innerHTML = err.message;
+        }
+    }  
+    
+    function countCheck(cb, cbid, cball){  
+        try{
+            var inputElem = document.getElementsByTagName("input");  
+            var count = parseInt(document.getElementById("CheckedSize").innerHTML);
+            if(cb.checked){
+                count++;
+                (cb.parentElement).parentElement.style.backgroundColor = '{!$Label.RowSelect}';
+                var inputElem = document.getElementsByTagName("input");
+                var isFalseFlag = true;
+                var checkAll = cb;
+                for(var i=0; i<inputElem.length; i++)  
+                {   
+                    var index1 = inputElem[i].id.indexOf(cball);         
+                    if(index1 != -1){
+                        if(!inputElem[i].checked) isFalseFlag = false;  
+                    }
+                    var index2 = inputElem[i].id.indexOf(cbid);         
+                    if(index2 != -1){
+                        checkAll = inputElem[i];
+                    }
+                }
+                checkAll.checked = isFalseFlag;
+            }else{
+                count--;
+                (cb.parentElement).parentElement.style.backgroundColor = null;
+                var inputElem = document.getElementsByTagName("input");
+                for(var i=0; i<inputElem.length; i++)  
+                {   
+                    var index = inputElem[i].id.indexOf(cbid);         
+                    if(index != -1){
+                        inputElem[i].checked = false;  
+                    }
+                }  
+            }
+            document.getElementById("CheckedSize").innerHTML = count;
+            document.getElementById("{!$Component.hdnSelectedTotal}").value = count;
+        }catch(err){
+            document.getElementById("ErrorMsg").innerHTML = err.message;
+        }
+    }
+    
+    function checkCheckAll(cbAllId, cbId){
+        try{
+            var inputElem = document.getElementsByTagName("input");
+            var isFalseFlag = true;
+            var checkAll;
+            for(var i=0; i<inputElem.length; i++)  
+            {   
+                var index1 = inputElem[i].id.indexOf(cbId);         
+                if(index1 != -1){
+                    if(!inputElem[i].checked) isFalseFlag = false;  
+                }
+                var index2 = inputElem[i].id.indexOf(cbAllId);         
+                if(index2 != -1){
+                    checkAll = inputElem[i];
+                }
+            }
+            checkAll.checked = isFalseFlag;
+        }catch(err){
+            
+            document.getElementById("ErrorMsg").innerHTML = err.message;
+        }
+    }
+    </script>
+    
+</apex:component>

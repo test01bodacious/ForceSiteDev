@@ -1,0 +1,70 @@
+<apex:component controller="ChatterComponentController" AllowDML="true">
+    <style>  
+        .col1{
+        	  position: absolute;
+              top: 5px;
+              left: 16px;
+              font-size: 18px;
+        	
+        }
+        .col2{
+        	align:center;
+        	width:70%;
+        	
+        }
+        .myStyleClass{  
+            height:10px !important;  
+            width:20px !important;  
+            background:#ffd0a8 !important;  
+            color:blue !important;  
+            border-style:solid !important;  
+            border-color:magenta !important;  
+            font-size:8px !important;  
+            border-width:2px !important;  
+        } 
+        
+        
+        .avatar {
+        vertical-align: middle;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        }
+        
+    </style>  
+    <apex:pageblock >
+        <apex:panelGrid columns="2" cellspacing="50px;" columnClasses="col1, col2">
+            <apex:outputPanel layout="block">
+                <div Style="width:100px;">
+                    <apex:image url="{!userImgUrl}" styleClass="avatar"/>
+                    <h3 style="color:blue; width:50%;"><br/>
+                        {!userName}
+                    </h3>
+                </div>
+            </apex:outputPanel>
+            <apex:outputPanel layout="block">
+                
+                <!--apex:tabPanel style="Width:50%; height:200px;" activeTabClass="myStyleClass" contentStyle="ajax" onclick="return false;">
+                <apex:tab label="Hello"/>   
+                <apex:tab label="Hello"/>   
+                <apex:tab label="Hello"/>   
+                </apex:tabPanel-->
+                <apex:inputTextarea value="{!postBody}"/>
+                <apex:commandButton action="{!PostFeed}" value="Share"/>
+                <div >
+                    <apex:repeat value="{!pstedMessageObject}" var="postMsg">
+                        <apex:image url="{!postMsg.userImgUrl}" styleClass="avatar" />
+                        <apex:commandLink value="{!postMsg.postedByUSer}" style="text-decoration:none; color:blue;"/><br/>
+                        {!postMsg.feedPostTime}<br/>
+                        
+                        <apex:repeat value="{!postMsg.messageLst}" var="msggg">
+                            <apex:outputText value="{!msggg}"/>
+                            
+                        </apex:repeat>
+                        <br/>
+                    </apex:repeat>
+                </div>
+            </apex:outputPanel>
+        </apex:panelGrid>
+    </apex:pageblock>
+</apex:component>

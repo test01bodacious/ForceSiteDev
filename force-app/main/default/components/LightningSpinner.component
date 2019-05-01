@@ -1,0 +1,38 @@
+<apex:component >
+    <apex:includeScript value="{!$Resource.JQuery}"/>
+
+    <script>
+    jQuery(window).load(function(){
+        jQuery('#overlay').fadeOut();
+    });
+    </script>
+    
+    <style>
+        #overlay{
+            background: rgba(255,255,255,0.3);
+            color: #666666;
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            z-index: 5000;
+            top: 0;
+            left: 0;
+            float: left;
+            text-align: center;
+        }
+        
+        #image{
+         height:60px;
+         width:60px;
+         position:absolute;
+         top:0;
+         bottom:0;
+         margin:auto;
+        }
+    </style>
+    
+    <div id="overlay">
+        <img src="{!$Resource.Lightning_Spinner}" alt="Loading.." id="image"/>
+    </div>
+    
+</apex:component>

@@ -1,0 +1,55 @@
+<apex:page controller="ProfilePermissionPageController">
+    <style>
+        .list1{
+            height: 250px !important;
+            
+            overflow: scroll !important;
+        }
+        .main{
+            height:550px;
+            overflow: scroll;
+        }
+        .btn{
+            font-size:14px;
+            height:35px;
+            width:150px;
+        }
+    </style>
+    <apex:form >
+        <apex:pageBlock title="Give Permission on Record Type" mode="maindetail" id="PageLayoutSelection">
+            <apex:pageMessages />
+            <apex:outputPanel layout="block" styleClass="main">
+                <apex:repeat value="{!proRtMap}" var="objName">
+                
+                    <apex:pageBlockSection columns="1" title="{!$ObjectType[objName].Label}" rendered="{!IF(proRtMap[objName].rtWrapLst.size == 1, IF(proRtMap[objName].rtWrapLst[0]['recordTypeName'] == 'Master', false, true), true)}">
+                            <apex:outputPanel styleclass="list1" layout="block">
+                            <apex:pageBlockTable value="{!proRtMap[objName].profWrapLst}" var="profWrap">
+                                    <apex:column headerValue="Profile" width="300px;">
+                                        {!profWrap.profileName}                        	
+                                    </apex:column>
+                                    <apex:repeat value="{!proRtMap[objName].rtWrapLst}" var="rtWrap">
+                                        <apex:column headerValue="{!rtWrap.recordTypeName} " >
+                                            <apex:inputCheckbox value="{!profWrap.prtLayout[rtWrap.recordTypeName].isPermitted}" />
+                                            <!-- <apex:selectList value="{!profWrap.prtLayout[rtWrap.recordTypeName].selectedPlName}" size="1" style="width:150px;">
+                                                <apex:selectOptions value="{!profWrap.prtLayout[rtWrap.recordTypeName].pgNames}"/>                                	
+                                            </apex:selectList> -->
+                                        </apex:column>
+                                    </apex:repeat>
+                                </apex:pageBlockTable>
+                          </apex:outputPanel>
+                    </apex:pageBlockSection>
+              
+            </apex:repeat>
+            </apex:outputPanel>
+            <center>
+                    <apex:commandButton value="Save" action="{!save}" reRender="PageLayoutSelection" status="SaveLayout" styleClass="btn"/>&nbsp;&nbsp;
+                    <apex:actionStatus id="SaveLayout">
+                        <apex:facet name="start">
+                            Saving...
+                        </apex:facet>
+                    </apex:actionStatus>
+                    <apex:commandButton value="Next" action="{!goToPageLayOutPage}" styleClass="btn"/>
+            </center>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

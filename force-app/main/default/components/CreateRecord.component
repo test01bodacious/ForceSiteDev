@@ -1,0 +1,444 @@
+<apex:component controller="CreateRecordComponentController" allowDML="true">
+    
+    <apex:attribute name="objectName" assignTo="{!selectedobj}" type="String" required="true" description="Name of the Object"/>
+    <apex:attribute name="recordId" assignTo="{!recId}" type="String" required="false" description="The id of the record" default="NA"/>
+    <apex:attribute name="fieldSize" type="Integer" required="false" description="The maximumm field size required to swicth to two column view" default="6"/>
+    
+    <apex:includeScript value="{!$Resource.JQuery}"/>
+    
+    <apex:includeScript value="{!URLFOR($Resource.Notification, 'Simple-Easy-jQuery-Notification-Plugin-NotifIt/notifIt/js/notifIt.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.Notification, 'Simple-Easy-jQuery-Notification-Plugin-NotifIt/notifIt/css/notifIt.css')}"/>
+    
+    <script>
+    function notify(type, title, description , position, timeout){
+        try{
+            notif({
+                msg: "<b> " + title + " :</b> " + description,
+                type: type.toLowerCase(),
+                position: position.toLowerCase(),
+                timeout: timeout,
+                width: 700,
+                opacity: 1,
+                multiline: 100
+                
+            });
+        }catch(err){
+            document.getElementById('ErrorMsg').innerHTML = err.message;
+        }
+    }
+    </script>
+    
+    <style>
+        body {font-family: Arial, Helvetica, sans-serif;}
+        
+        /* The Modal (background) */
+        .modal {
+        display: block; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1; /* Sit on top */
+        padding-top: 55px; /* Location of the box */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgb(0,0,0); /* Fallback color */
+        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+        
+        /* Modal Content */
+        .modal-content {
+        position: relative;
+        background-color: #fefefe;
+        margin: auto;
+        padding: 0;
+        border: 1px solid #888;
+        width:{!IF(flds.size <= fieldSize,'39%','73%')};
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+        -webkit-animation-name: animatetop;
+        -webkit-animation-duration: 0.4s;
+        animation-name: animatetop;
+        animation-duration: 0.4s
+        }
+        
+        .modal-content-out {
+        position: relative;
+        background-color: #fefefe;
+        margin: auto;
+        padding: 0;
+        border: 1px solid #888;
+        width:{!IF(flds.size <= fieldSize,'39%','73%')};
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+        -webkit-animation-name: animatetopreverse;
+        -webkit-animation-duration: 0.4s;
+        animation-name: animatetopreverse;
+        animation-duration: 0.4s
+        }
+        
+        /* Add Animation */
+        @-webkit-keyframes animatetop {
+        from {top:-300px; opacity:0} 
+        to {top:0; opacity:1}
+        }
+        
+        @keyframes animatetop {
+        from {top:-300px; opacity:0}
+        to {top:0; opacity:1}
+        }
+        
+        @-webkit-keyframes animatetopreverse {
+        from {top:0; opacity:1} 
+        to {top:-300px; opacity:0}
+        }
+        
+        @keyframes animatetopreverse {
+        from {top:0; opacity:1} 
+        to {top:-300px; opacity:0}
+        }
+        
+        /* The Close Button */
+        .close {
+        color: lightgrey;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        }
+        
+        .close:hover,
+        .close:focus {
+        color: red;
+        text-decoration: none;
+        cursor: pointer;
+        }
+        
+        .modal-header {
+        height:55px;
+        line-height:55px;
+        padding: 2px 16px;
+        background-color: #ffffff;
+        color: black;
+        font-size: 18px;
+        }
+        
+        .modal-body {padding: 2px 16px;}
+        
+        .modal-footer {
+        height:35px;
+        line-height:35px;
+        padding: 2px 16px;
+        background-color: #5cb85c;
+        color: white;
+        }
+    </style>
+    
+    <style>
+        * {
+        box-sizing: border-box;
+        }
+        
+        /*the container must be positioned relative:*/
+        .autocomplete {
+        position: relative;
+        display: inline-block;
+        }
+        
+        .autocomplete-items {
+        position: absolute;
+        border: 1px solid #d4d4d4;
+        border-bottom: none;
+        border-top: none;
+        z-index: 99;
+        /*position the autocomplete items to be the same width as the container:*/
+        top: 100%;
+        left: 0;
+        right: 0;
+        }
+        
+        .autocomplete-items div {
+        padding: 10px;
+        cursor: pointer;
+        background-color: #fff; 
+        border-bottom: 1px solid #d4d4d4; 
+        }
+        
+        /*when hovering an item:*/
+        .autocomplete-items div:hover {
+        background-color: #e9e9e9; 
+        }
+        
+        /*when navigating through the items using the arrow keys:*/
+        .autocomplete-active {
+        background-color: DodgerBlue !important; 
+        color: #ffffff; 
+        }
+    </style>
+    
+    <!-- The Modal -->
+    <div id="myModal" class="modal">
+        
+        <!-- Modal content -->
+        <div id="modalContent" class="modal-content">
+            <div class="modal-header">
+                <span class="close">&times;</span>
+                <label>{!IF(recId != 'NA','Update Account','Create New ' + $ObjectType[selectedObj].Label)} </label>
+            </div>
+            <div class="modal-body">
+                <p>
+                    <center>
+                        <apex:pageBlock mode="maindetail" id="Modal">
+                            <p id="ErrorMsg" style="color:red;"/>
+                            <apex:outputText value="{!JavaScriptFunctionCall}" escape="false"/>
+                            <script>
+                            j$ = jQuery.noConflict();  
+                            j$(document).ready(function(){
+                                try{
+                                    j$(".requiredBlock").css("display", "none");
+                                    j$(".lookupIcon").css("display", "none");
+                                    j$(".datePicker").css("display", "none");
+                                    j$(".multiSelectPicklistCell").css("padding-left", "20%");
+                                }catch(err){
+                                    alert(err.message);
+                                }
+                            });
+                            </script>
+                            <apex:outputPanel layout="block" style="position:relative;">
+                                <apex:actionStatus id="Lightning_Spinner">
+                                <apex:facet name="start">
+                                <c:LightningSpinner />
+                                </apex:facet>
+                                </apex:actionStatus>
+                                <apex:outputPanel layout="block" style="max-height:500px;overflow:auto;">
+                                    <apex:variable value="false" var="firstTime"/>
+                                    <apex:pageBlockSection columns="{!IF(flds.size <= fieldSize,'1','2')}">
+                                        <apex:repeat value="{!flds}" var="fld"> 
+                                            <apex:outputPanel layout="block" style="padding-left:70px;">
+                                                <apex:outputLabel value="{!$ObjectType[selectedObj].Fields[fld].Label}" style="font-size:12px;"/>
+                                                <apex:outputLabel value="*" style="font-size:12px;color:red;" rendered="{!!$ObjectType[selectedObj].Fields[fld].Nillable}"/><br/>
+                                                <apex:outputPanel rendered="{!NOT(OR($ObjectType[selectedObj].Fields[fld].Type == 'datetime',$ObjectType[selectedObj].Fields[fld].Type == 'date', $ObjectType[selectedObj].Fields[fld].Type == 'reference', $ObjectType[selectedObj].Fields[fld].Type == 'multipicklist'))}">
+                                                    <apex:inputField value="{!recWrap.dummyrecord[fld]}"
+                                                                     style="{!IF($ObjectType[selectedObj].Fields[fld].Type = 'boolean','height:30px;width:30px;','height:35px;width:425px;font-size:14px;')}"
+                                                                     label="" required="false"/><br/>
+                                                </apex:outputPanel>
+                                                <apex:outputPanel layout="block" rendered="{!$ObjectType[selectedObj].Fields[fld].Type == 'multipicklist'}" style="max-width:430px;overflow:auto;">
+                                                    <apex:inputField value="{!recWrap.dummyrecord[fld]}" label="" style="width:103px;" required="false"/>
+                                                </apex:outputPanel>
+                                                <apex:outputPanel rendered="{!$ObjectType[selectedObj].Fields[fld].Type == 'reference'}">
+                                                    <div class="autocomplete" style="width:300px;">
+                                                        <apex:inputField style="height:35px;width:425px;font-size:14px;"  value="{!recWrap.dummyrecord[fld]}" id="refInputField" html-placeholder="Search Records"/><br/>
+                                                        <script> 
+                                                        	var records = [];
+                                                        </script>
+                                                        <apex:repeat value="{!recWrap.lookUpMap[fld].refObjRecords}" var="record">
+                                                            <script>
+                                                            	records.push('{!record}');
+                                                            </script>
+                                                        </apex:repeat>
+                                                        <script>
+                                                        function autocomplete(inp, arr) {
+                                                            /*the autocomplete function takes two arguments,
+  															the text field element and an array of possible autocompleted values:*/
+                                                            var currentFocus;
+                                                            /*execute a function when someone writes in the text field:*/
+                                                            inp.addEventListener("input", function(e) {
+                                                                var a, b, i, val = this.value;
+                                                                /*close any already open lists of autocompleted values*/
+                                                                closeAllLists();
+                                                                if (!val) { return false;}
+                                                                currentFocus = -1;
+                                                                /*create a DIV element that will contain the items (values):*/
+                                                                a = document.createElement("DIV");
+                                                                a.setAttribute("id", this.id + "autocomplete-list");
+                                                                a.setAttribute("class", "autocomplete-items");
+                                                                /*append the DIV element as a child of the autocomplete container:*/
+                                                                this.parentNode.appendChild(a);
+                                                                /*for each item in the array...*/
+                                                                for (i = 0; i < arr.length; i++) {
+                                                                    /*check if the item starts with the same letters as the text field value:*/
+                                                                    if ((arr[i].toUpperCase()).includes(val.toUpperCase())){
+                                                                        //if (arr[i].substr(0, val.length).toUpperCase() == val.toUpperCase() != -1){
+                                                                        /*create a DIV element for each matching element:*/
+                                                                        b = document.createElement("DIV");
+                                                                        /*make the matching letters bold:*/
+                                                                        b.innerHTML = arr[i].substr(0,  arr[i].toUpperCase().indexOf(val.toUpperCase()));
+                                                                        b.innerHTML += "<strong>" + arr[i].substr(arr[i].toUpperCase().indexOf(val.toUpperCase()), val.length) + "</strong>";
+                                                                        b.innerHTML += arr[i].substr(arr[i].toUpperCase().indexOf(val.toUpperCase()) + val.length);
+                                                                        /*insert a input field that will hold the current array item's value:*/
+                                                                        b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
+                                                                        /*execute a function when someone clicks on the item value (DIV element):*/
+                                                                        b.addEventListener("click", function(e) {
+                                                                            /*insert the value for the autocomplete text field:*/
+                                                                            inp.value = this.getElementsByTagName("input")[0].value;
+                                                                            /*close the list of autocompleted values,
+              															(or any other open lists of autocompleted values:*/
+                                                                            closeAllLists();
+                                                                        });
+                                                                        a.appendChild(b);
+                                                                    }
+                                                                }
+                                                            });
+                                                            /*execute a function presses a key on the keyboard:*/
+                                                            inp.addEventListener("keydown", function(e) {
+                                                                var x = document.getElementById(this.id + "autocomplete-list");
+                                                                if (x) x = x.getElementsByTagName("div");
+                                                                if (e.keyCode == 40) {
+                                                                    /*If the arrow DOWN key is pressed,
+        														increase the currentFocus variable:*/
+                                                                    currentFocus++;
+                                                                    /*and and make the current item more visible:*/
+                                                                    addActive(x);
+                                                                } else if (e.keyCode == 38) { //up
+                                                                    /*If the arrow UP key is pressed,
+        														decrease the currentFocus variable:*/
+                                                                    currentFocus--;
+                                                                    /*and and make the current item more visible:*/
+                                                                    addActive(x);
+                                                                } else if (e.keyCode == 13) {
+                                                                    /*If the ENTER key is pressed, prevent the form from being submitted,*/
+                                                                    e.preventDefault();
+                                                                    if (currentFocus > -1) {
+                                                                        /*and simulate a click on the "active" item:*/
+                                                                        if (x) x[currentFocus].click();
+                                                                    }
+                                                                }
+                                                            });
+                                                            function addActive(x) {
+                                                                /*a function to classify an item as "active":*/
+                                                                if (!x) return false;
+                                                                /*start by removing the "active" class on all items:*/
+                                                                removeActive(x);
+                                                                if (currentFocus >= x.length) currentFocus = 0;
+                                                                if (currentFocus < 0) currentFocus = (x.length - 1);
+                                                                /*add class "autocomplete-active":*/
+                                                                x[currentFocus].classList.add("autocomplete-active");
+                                                            }
+                                                            function removeActive(x) {
+                                                                /*a function to remove the "active" class from all autocomplete items:*/
+                                                                for (var i = 0; i < x.length; i++) {
+                                                                    x[i].classList.remove("autocomplete-active");
+                                                                }
+                                                            }
+                                                            function closeAllLists(elmnt) {
+                                                                /*close all autocomplete lists in the document,
+    															except the one passed as an argument:*/
+                                                                var x = document.getElementsByClassName("autocomplete-items");
+                                                                for (var i = 0; i < x.length; i++) {
+                                                                    if (elmnt != x[i] && elmnt != inp) {
+                                                                        x[i].parentNode.removeChild(x[i]);
+                                                                    }
+                                                                }
+                                                            }
+                                                            /*execute a function when someone clicks in the document:*/
+                                                            document.addEventListener("click", function (e) {
+                                                                closeAllLists(e.target);
+                                                            });
+                                                        }
+                                                       
+                                                        records = '[' + records + ']';
+                                                        try{
+                                                            var recordList = JSON.parse(records);
+                                                        }catch(err){
+                                                            alert(err.message);
+                                                        }
+                                                        /*initiate the autocomplete function on the "myInput" element, and pass along the countries array as possible autocomplete values:*/
+                                                        autocomplete(document.getElementById("{!$Component.refInputField}"), recordList);
+                                                        </script>
+                                                    </div>
+                                                </apex:outputPanel>
+                                                <apex:outputPanel rendered="{!$ObjectType[selectedObj].Fields[fld].Type == 'date'}">
+                                                    <apex:inputHidden value="{!recWrap.dateFields[fld]}" id="dateVar"/>
+                                                    <input style="height:22px;width:425px;font-size:14px;" type="date" value="{!recWrap.dateFields[fld]}" onblur="document.getElementById(this.parentElement.childNodes[0].id).value = this.value;"/><br/>
+                                                </apex:outputPanel>
+                                                <apex:outputPanel rendered="{!$ObjectType[selectedObj].Fields[fld].Type == 'datetime'}">
+                                                    <apex:inputHidden value="{!recWrap.dateTimeFields[fld]}" id="dateTimeVar"/>
+                                                    <input style="height:22px;width:425px;font-size:14px;" type="datetime-local" value="{!recWrap.dateTimeFields[fld]}" onblur="document.getElementById(this.parentElement.childNodes[0].id).value = this.value;"/><br/>
+                                                </apex:outputPanel>
+                                                <apex:outputText value="<br/>" escape="false" rendered="{!firstTime}"/>
+                                                <apex:variable value="true" var="firstTime"/>
+                                            </apex:outputPanel>
+                                        </apex:repeat>
+                                    </apex:pageBlockSection>
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                            <br/><br/><br/>
+                            <center>
+                                <apex:commandButton value="Save" action="{!save}" reRender="Modal" style="width:100px !important;" styleclass="btn btn-default" status="Lightning_Spinner"/>&nbsp;&nbsp;&nbsp;&nbsp;
+                                <apex:commandButton value="Cancel" reRender="Nothing" style="width:100px !important;" immediate="true" onclick="cancelModal();" action="{!cancel}"/>
+                            </center>
+                        </apex:pageBlock>
+                    </center>
+                </p>
+            </div>
+            <!--div class="modal-footer">
+<h3>Modal Footer</h3>
+</div-->
+        </div>
+        
+    </div>
+    
+    <script>
+    // Get the modal
+    var modal = document.getElementById('myModal');
+    
+    var modalContent = document.getElementById('modalContent');
+    
+    // Get the button that opens the modal
+    //var btn = document.getElementById("buttonId");
+    
+    // Get the <span> element that closes the modal
+    var span = document.getElementsByClassName("close")[0];
+    
+    // When the user clicks the button, open the modal 
+    /*btn.onclick = function() {
+        modalContent.classList.remove('modal-content-out');
+        modalContent.classList.add('modal-content');
+        modal.style.display = "block";
+    }*/
+    
+    // When the user clicks on <span> (x), close the modal
+    span.onclick = function() {
+        modalContent.classList.remove('modal-content');
+        modalContent.classList.add('modal-content-out'); 
+        setTimeout(function(){
+            modal.style.display = "none";
+        }, 400);
+    }
+    
+    // When the user clicks on Cancel, close the modal
+    function cancelModal() {
+        modalContent.classList.remove('modal-content');
+        modalContent.classList.add('modal-content-out'); 
+        setTimeout(function(){
+            modal.style.display = "none";
+        }, 400);
+    }
+    
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+        /*if (event.target == modal) {
+            modalContent.classList.remove('modal-content');
+            modalContent.classList.add('modal-content-out'); 
+            setTimeout(function(){
+                modal.style.display = "none";
+            }, 400);
+        }*/
+    }
+    
+    document.onkeydown = function(evt) {
+        evt = evt || window.event;
+        var isEscape = false;
+        if ("key" in evt) {
+            isEscape = (evt.key === "Escape" || evt.key === "Esc");
+        } else {
+            isEscape = (evt.keyCode === 27);
+        }
+        if (isEscape) {
+            modalContent.classList.remove('modal-content');
+            modalContent.classList.add('modal-content-out'); 
+            setTimeout(function(){
+                modal.style.display = "none";
+            }, 400);
+        }
+    };
+    </script> 
+    
+</apex:component>

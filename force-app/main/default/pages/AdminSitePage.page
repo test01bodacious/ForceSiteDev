@@ -1,0 +1,232 @@
+<apex:page controller="AdminSitePageController">
+        
+    <Style>
+        .activeTabClass{
+        height:40px !important;
+        line-height:40px !important;
+        width:200px !important;
+        background: #1751A0 !important;
+        color:white !important;
+        //border-style:solid !important;
+        //border-color:blue !important;
+        font-size:18px !important;
+        //border-width:2px !important;
+        }
+        
+        .inActiveTabClass{
+        height:40px !important;
+        line-height:40px !important;
+        width:200px !important;
+        background: #E7E7E7 !important;
+        color:black !important;
+        //border-style:solid !important;
+        //border-color:grey !important;
+        font-size:18px !important;
+        //border-width:2px !important;
+        }
+    </Style>
+    <apex:form >
+        <apex:outputPanel layout="block" id="SiteSchemaControlPanel">
+            <apex:pageMessages />
+            <apex:panelGrid width="100%" columns="1" columnClasses="col1,col2,col3" rendered="{!nextPage = 'ObjectSelection'}">
+                <apex:outputPanel layout="block">
+                    <br/>Select Objects<br/><br/>
+                </apex:outputPanel>
+                <apex:outputPanel layout="block">
+                    <apex:tabPanel switchType="client" activeTabClass="activeTabClass" inactiveTabClass="inActiveTabClass">
+                        <apex:tab label="{!views[0]}" id="Header" >
+                            <center>
+                                <c:MultiselectPicklist leftLabel="Available Objects"
+                                                    leftOption="{!objOpts[views[0]].availableObjectOptions}"
+                                                    rightLabel="Selected Objects"
+                                                    rightOption="{!objOpts[views[0]].selectedObjectOptions}"
+                                                    size="14"
+                                                    width="250px" /><br/><br/>   
+                                <apex:commandButton value="Confirm" action="{!confirm}" style="font-size:14px;height:35px;width:150px;" reRender="SiteSchemaControlPanel" status="Lightning_Spinner1">
+                                    <apex:param name="{!views[0]}" value="{!views[0]}" assignTo="{!focusedView}"/>
+                                </apex:commandButton>
+                                &nbsp;&nbsp;&nbsp;
+                                <apex:actionStatus id="Lightning_Spinner1">
+                                    <apex:facet name="start">
+                                            <font size="3" color="red">Loading...</font>
+                                    </apex:facet>
+                                </apex:actionStatus>
+                        </center>
+                        </apex:tab>
+                        <apex:tab label="{!views[1]}" id="Global" >
+                            <center>
+                                <c:MultiselectPicklist leftLabel="Available Objects"
+                                                    leftOption="{!objOpts[views[1]].availableObjectOptions}"
+                                                    rightLabel="Selected Objects"
+                                                    rightOption="{!objOpts[views[1]].selectedObjectOptions}"
+                                                    size="14"
+                                                    width="250px" /><br/><br/>
+                                <apex:commandButton value="Confirm" action="{!confirm}" style="font-size:14px;height:35px;width:150px;" reRender="SiteSchemaControlPanel" status="Lightning_Spinner2">
+                                    <apex:param name="{!views[1]}" value="{!views[1]}" assignTo="{!focusedView}"/>
+                                </apex:commandButton>&nbsp;&nbsp;
+                                <apex:actionStatus id="Lightning_Spinner2">
+                                    <apex:facet name="start">
+                                            <font size="2" color="red">Loading...</font>
+                                    </apex:facet>
+                                </apex:actionStatus>
+                            </center>
+                        </apex:tab>
+                        <apex:tab label="Related Lists" id="relatedlist">
+                            <center>
+                                <c:MultiselectPicklist leftLabel="Available Objects"
+                                                    leftOption="{!objOpts[views[2]].availableObjectOptions}"
+                                                    rightLabel="Selected Objects"
+                                                    rightOption="{!objOpts[views[2]].selectedObjectOptions}"
+                                                    size="14"
+                                                    width="250px" /><br/><br/>
+                                <apex:commandButton value="Confirm" action="{!confirm}" style="font-size:14px;height:35px;width:150px;" reRender="SiteSchemaControlPanel" status="Lightning_Spinner4">
+                                    <apex:param name="{!views[2]}" value="{!views[2]}" assignTo="{!focusedView}"/>
+                                </apex:commandButton>&nbsp;&nbsp;
+                                <apex:actionStatus id="Lightning_Spinner4">
+                                    <apex:facet name="start">
+                                            <font size="2" color="red">Loading...</font>
+                                    </apex:facet>
+                                </apex:actionStatus>
+                            </center>
+                        </apex:tab>
+                        <apex:tab label="Control Page Layouts" id="All" >
+                            <center>
+                                <c:MultiselectPicklist leftLabel="Available Objects"
+                                                    leftOption="{!objOpts[views[3]].availableObjectOptions}"
+                                                    rightLabel="Selected Objects"
+                                                    rightOption="{!objOpts[views[3]].selectedObjectOptions}"
+                                                    size="14"
+                                                    width="250px" /><br/><br/>
+                                <apex:commandButton value="Confirm" action="{!confirm}" style="font-size:14px;height:35px;width:150px;" reRender="SiteSchemaControlPanel" status="Lightning_Spinner3">
+                                    <apex:param name="{!views[3]}" value="{!views[3]}" assignTo="{!focusedView}"/>
+                                </apex:commandButton>&nbsp;&nbsp;
+                                <apex:inputCheckbox value="{!refreshProfile}" id="profilecheckbox"/>
+                                <apex:outputLabel value="Refresh Profile" for="profilecheckbox" />&nbsp;&nbsp;
+                                <apex:actionStatus id="Lightning_Spinner3">
+                                    <apex:facet name="start">
+                                            <font size="2" color="red">Loading...</font>
+                                    </apex:facet>
+                                </apex:actionStatus>
+                            </center>
+                        </apex:tab>
+                    </apex:tabPanel>
+                </apex:outputPanel>
+            </apex:panelGrid>
+            <center>
+                <apex:outputPanel rendered="{!isJobIdRefresh = 'refreshbutton'}" layout="block">
+                <apex:commandButton value="Refresh" action="{!refresh}" reRender="SiteSchemaControlPanel" style="font-size:14px;height:35px;width:150px;" />
+            </apex:outputPanel>
+            </center>
+            <apex:outputPanel rendered="{!isJobIdRefresh = 'FieldSelection'}">
+                <apex:outputPanel layout="block" style="text-align:center;width:100%;" rendered="{!nextPage='FieldSelection'}">
+                <br/><apex:commandButton value="Save" action="{!updateFieldOptionsMap}" reRender="SiteSchemaControlPanel" style="font-size:14px;height:35px;width:150px;" status="Lightning_Spinner"/>&nbsp;&nbsp;
+                <!-- <apex:commandButton value="Next" action="{!initrelatedList}" reRender="SiteSchemaControlPanel" style="font-size:14px;height:35px;width:150px;" />&nbsp;&nbsp; -->
+                <apex:actionStatus id="Lightning_Spinner">
+                        
+                    <apex:facet name="start">
+                            <font size="2" color="green">Saving...</font>
+                    </apex:facet>
+                </apex:actionStatus><br/><br/>
+                </apex:outputPanel>
+                <apex:panelGrid columns="2" width="100%" rendered="{!nextPage = 'FieldSelection'}">
+                    <apex:repeat value="{!fldOpts}" var="fldOptKey">
+                            <apex:panelGrid columns="1" width="100%" rendered="{!MOD(fldOpts[fldOptKey].index, 2) != 0}">
+                                <apex:panelGrid width="100%" columns="1">
+                                        Select Fields for {!$ObjectType[fldOptKey].Label}
+                                </apex:panelGrid>
+                                <apex:panelGrid width="100%" columns="1" >
+                                        <c:MultiselectPicklist leftLabel="Available Fields"
+                                                            leftOption="{!fldOpts[fldOptKey].availableFieldOptions}"
+                                                            rightLabel="Selected Fields"
+                                                            rightOption="{!fldOpts[fldOptKey].selectedFieldOptions}"
+                                                            size="14"
+                                                            width="250px" />
+                                </apex:panelGrid>
+                            </apex:panelGrid>
+                    </apex:repeat>
+                    <apex:repeat value="{!fldOpts}" var="fldOptKey">
+                            <apex:panelGrid columns="1" width="100%" rendered="{!MOD(fldOpts[fldOptKey].index, 2) == 0}">
+                                <apex:panelGrid width="100%" columns="1">
+                                        Select Fields for {!$ObjectType[fldOptKey].Label}
+                                </apex:panelGrid>
+                                <apex:panelGrid width="100%" columns="1">
+                                        <c:MultiselectPicklist leftLabel="Available fields"
+                                                            leftOption="{!fldOpts[fldOptKey].availableFieldOptions}"
+                                                            rightLabel="Selected Fields"
+                                                            rightOption="{!fldOpts[fldOptKey].selectedFieldOptions}"
+                                                            size="14"
+                                                            width="250px" />
+                                </apex:panelGrid>
+                            </apex:panelGrid>
+                    </apex:repeat>
+                </apex:panelGrid>
+            </apex:outputPanel>
+            <apex:panelGrid columns="1" rendered="{!nextPage = 'PageLayoutSelection'}">
+                Hello
+            </apex:panelGrid>
+            <center> 
+                    <apex:commandButton value="Save" action="{!saveRelatedList}" style="font-size:14px;height:35px;width:150px;" reRender="SiteSchemaControlPanel" rendered="{!nextPage = 'RelatedList'}" status="relatedlistspinner"/>&nbsp; &nbsp;
+                    <apex:commandButton value="Next" action="{!initFldOPtionForRelatedObj}" style="font-size:14px;height:35px;width:150px;" reRender="SiteSchemaControlPanel" rendered="{!nextPage = 'RelatedList'}" status="loading"/>&nbsp; &nbsp;
+                    <apex:actionStatus id="relatedlistspinner">
+                        
+                            <apex:facet name="start">
+                                    <font size="2" color="green">Saving...</font>
+                            </apex:facet>
+                        </apex:actionStatus>
+                        <apex:actionStatus id="loading">
+                        
+                            <apex:facet name="start">
+                                    <font size="2" color="green">Loading...</font>
+                            </apex:facet>
+                        </apex:actionStatus>
+                </center>
+            <apex:panelGrid columns="2" width="100%" rendered="{!nextPage = 'RelatedList'}">                    
+                <apex:repeat value="{!rltOpts}" var="fldOptKey">
+                        <apex:panelGrid columns="1" width="100%" rendered="{!MOD(rltOpts[fldOptKey].index, 2) != 0}">
+                            <apex:panelGrid width="100%" columns="1">
+                                    Select Related Object for {!$ObjectType[fldOptKey].Label}
+                            </apex:panelGrid>
+                            <apex:panelGrid width="100%" columns="1" >
+                                    <c:MultiselectPicklist leftLabel="Available Objects"
+                                                        leftOption="{!rltOpts[fldOptKey].availableObjOptions}"
+                                                        rightLabel="Selected Objects"
+                                                        rightOption="{!rltOpts[fldOptKey].selectedObjOptions}"
+                                                        size="14"
+                                                        width="250px" />
+                            </apex:panelGrid>
+                        </apex:panelGrid>
+                </apex:repeat>
+                <apex:repeat value="{!rltOpts}" var="fldOptKey">
+                        <apex:panelGrid columns="1" width="100%" rendered="{!MOD(rltOpts[fldOptKey].index, 2) == 0}">
+                            <apex:panelGrid width="100%" columns="1">
+                                    Select Related Object for {!$ObjectType[fldOptKey].Label} 
+                            </apex:panelGrid>
+                            <apex:panelGrid width="100%" columns="1" >
+                                    <c:MultiselectPicklist leftLabel="Available Objects"
+                                                        leftOption="{!rltOpts[fldOptKey].availableObjOptions}"
+                                                        rightLabel="Selected Objects"
+                                                        rightOption="{!rltOpts[fldOptKey].selectedObjOptions}"
+                                                        size="14"
+                                                        width="250px" />
+                            </apex:panelGrid>
+                        </apex:panelGrid>
+                </apex:repeat>
+                
+                </apex:panelGrid>
+        </apex:outputPanel>
+        <style>
+            .col1{
+            width:100%;
+            text-align:center;
+            }
+            .col2{
+            width:100%;
+            text-align:center;
+            }
+            .col3{
+            width:100%;
+            text-align:center;
+            }
+        </style>
+    </apex:form>
+    </apex:page>

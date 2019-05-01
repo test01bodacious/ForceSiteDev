@@ -1,0 +1,124 @@
+<apex:page controller="SampleDataTypeDisplay" cache="False" expires="0" tabStyle="Contact" >  
+    <apex:includeScript value="{!$Resource.JQuery}"/>  
+    <apex:includescript value="//cdn.datatables.net/1.10.4/js/jquery.dataTables.min.js"/>  
+    <apex:stylesheet value="//cdn.datatables.net/1.10.4/css/jquery.dataTables.css"/>  
+    
+    <apex:form id="Records">
+        <apex:pageBlock title="Create {!$ObjectType[selectedObj].Label}" id="EditRecords" mode="maindetail" rendered="{!!isCreate}">
+            <apex:pageMessages escape="false"/>
+            <apex:inlineEditSupport event="onDblClick"/>
+            <apex:pageBlockSection columns="1" >
+                <apex:outputPanel layout="block">
+                    <script>  
+                    j$ = jQuery.noConflict();  
+                    j$(document).ready( function () {  
+                        try{
+                            //var accTable = j$("#accTable").DataTable({  
+                            var accTable = j$("#RecordList").DataTable({
+                            }); 
+                        }catch(err){
+                            document.getElementById("ErrorMsg").innerHTML = err.message;
+                        }
+                    });  
+                    </script>
+                    <!--apex:pageBlockTable value="{!mainlist1}" var="lst1"  id="RecordList" style="display" >
+                        <apex:inlineEditSupport event="onDblClick" />
+                        <apex:repeat value="{!lst1}" var="lst">
+                            <apex:column >
+                                <apex:facet name="header">Hello</apex:facet>
+                            </apex:column>
+                            <apex:column >
+                                <apex:outputPanel layout="block">
+                                    <apex:variable value="{!lst.sampleobj}" var="myObj"/>
+                                    <apex:variable value="{!lst.samplefldType}" var="myFld"/>
+                                    <apex:selectList value="{!lst.selectedpickvalue1}" size="1" label="{!lst.labl}"
+                                                     
+                                                     rendered="{!IF($ObjectType[selectedObj].Fields[lst.selctedObjFldApi].Type=='picklist', true,false)}">
+                                        <apex:selectOptions value="{!lst.selectOptionsValue}" />
+                                    </apex:selectList>
+                                    <apex:outputField value="{!myObj[myFld]}" />
+                                </apex:outputPanel>
+                            </apex:column>
+                        </apex:repeat>
+                    </apex:pageBlockTable--> 
+                    <table id="RecordList" style="display">
+                        <thead>
+                            <tr>
+                                <apex:repeat value="{!MainList1[0]}" var="lst">
+                                    <th>{!$ObjectType[selectedObj].Fields[lst.selctedObjFldApi].Label}</th>
+                                </apex:repeat>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <apex:repeat value="{!MainList1}" var="acc">
+                                <tr>
+                                    <apex:repeat value="{!acc}" var="lst">
+                                        <!--td><apex:outputField value="{!lst.sampleobj[lst.samplefldType]}"/></td-->
+                                        <td>
+                                            <apex:selectList value="{!lst.selectedpickvalue1}" size="1" label="{!lst.labl}"
+                                                            
+                                                             rendered="{!IF($ObjectType[selectedObj].Fields[lst.selctedObjFldApi].Type=='picklist', false,false)}">
+                                                <apex:selectOptions value="{!lst.selectOptionsValue}" />
+                                            </apex:selectList>
+                                            <apex:outputfield value="{!lst.sampleobj[lst.samplefldType]}" label="{!lst.labl}"
+                                                             rendered="{!IF($ObjectType[selectedObj].Fields[lst.selctedObjFldApi].Type=='picklist', true,false)}"
+                                                               /> 
+                                            <apex:outputfield value="{!lst.sampleobj[lst.samplefldType]}" label="{!lst.labl}"
+                                                             rendered="{!IF($ObjectType[selectedObj].Fields[lst.selctedObjFldApi].Type=='picklist', false,true)}" /> 
+                                        </td>
+                                        <script>
+                                        function myFunction(){
+                                            alert('Hello');
+											}
+                                        </script>
+                                    </apex:repeat>
+                                </tr>
+                            </apex:repeat>
+                        </tbody>
+                    </table>
+                </apex:outputPanel>
+                <style>
+                    .back1{
+                    background-color:yellow !important;
+                    }
+                    .back2{
+                    background-color:green !important;
+                    }
+                    .headerRow th{
+                    display:none;
+                    }
+                </style>
+            </apex:pageBlockSection>
+            <apex:pageBlockButtons style="padding-left:150px;" >
+                <apex:commandButton value="Save" action="{!saveRecords}" reRender="EditRecords"/>&nbsp;&nbsp;
+                <apex:commandButton value="create" action="{!createRecord}" reRender="Records"/>
+                <apex:commandButton value="Cancel" reRender="EditRecords" />
+            </apex:pageBlockButtons>
+        </apex:pageBlock>
+        <apex:pageBlock title="Create {!$ObjectType[selectedObj].Label}" id="CreateRecords" rendered="{!isCreate}" >
+            <apex:pageMessages escape="false"/>
+            <apex:inlineEditSupport event="onDblClick"/>
+            <apex:pageBlockSection columns="2" title="Create Contact" showHeader="false">
+                <apex:variable var="stlin" value="border-left:3px solid red;"/>
+                <apex:repeat value="{!MainList}" var="lst">
+                    <apex:selectList value="{!lst.selectedpickvalue1}" size="1" label="{!lst.labl}"
+                                     style="{!stlin}"
+                                     rendered="{!IF($ObjectType[selectedObj].Fields[lst.selctedObjFldApi].Type=='picklist', true,false)}">
+                        <apex:selectOptions value="{!lst.selectOptionsValue}" />
+                    </apex:selectList>
+                    
+                    <apex:inputfield value="{!lst.sampleobj[lst.samplefldType]}" label="{!lst.labl}"
+                                     required="{!IF(!$ObjectType[selectedObj].Fields[lst.selctedObjFldApi].Nillable, 
+                                               (IF($ObjectType[selectedObj].Fields[lst.selctedObjFldApi].Type=='boolean',false, true)), false)}" 
+                                     rendered="{!IF($ObjectType[selectedObj].Fields[lst.selctedObjFldApi].Type=='picklist', false,true)}" />                   
+                </apex:repeat>  
+            </apex:pageBlockSection>
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Save" action="{!saveRecord}" reRender="Records"/>&nbsp;&nbsp;
+                <apex:commandButton value="Cancel" action="{!cancelRecord}" reRender="Records" immediate="true"/>
+                <apex:commandButton value="Refresh" action="{!refresh}"  reRender="Records"/>
+            </apex:pageBlockButtons>
+        </apex:pageBlock>
+    </apex:form>
+    
+</apex:page>

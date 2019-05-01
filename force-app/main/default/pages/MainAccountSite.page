@@ -1,0 +1,889 @@
+<apex:page controller="TheMainControllerSite" action="{!triggerasync}">
+    
+    <style type="text/css">
+        .custPopup{
+        background-color: white;
+        border-width: 0px;
+        border-style: solid;
+        z-index: 9999;
+        left: 30%;
+        padding:50px;
+        position: absolute;
+        /* These are the 3 css properties you will need to change so the popup 
+        displays in the center of the screen. First set the width. Then set 
+        margin-left to negative half of what the width is. You can add 
+        the height property for a fixed size pop up if you want.*/
+        width: 1000px;
+        margin-left: -250px;
+        top:100px;
+        box-shadow: 0 5px 8px 0 rgba(0,0,0,0.2),0 7px 20px 0 rgba(0,0,0,0.17);
+        animation-name:modalopen;
+        animation-duration:1s;
+        }
+        
+        .custPopupPick{
+        background-color: white;
+        border-width: 0px;
+        border-style: solid;
+        z-index: 9999;
+        left: 50%;
+        padding:50px;
+        position: absolute;
+        /* These are the 3 css properties you will need to change so the popup 
+        displays in the center of the screen. First set the width. Then set 
+        margin-left to negative half of what the width is. You can add 
+        the height property for a fixed size pop up if you want.*/
+        width: 500px;
+        margin-left: -250px;
+        top:100px;
+        box-shadow: 0 5px 8px 0 rgba(0,0,0,0.2),0 7px 20px 0 rgba(0,0,0,0.17);
+        animation-name:modalopen;
+        animation-duration:1s;
+        }
+        
+        .custPopupTE{
+        background-color: white;
+        border-width: 0px;
+        border-style: solid;
+        z-index: 9999;
+        left: 32%;
+        padding:50px;
+        position: absolute;
+        /* These are the 3 css properties you will need to change so the popup 
+        displays in the center of the screen. First set the width. Then set 
+        margin-left to negative half of what the width is. You can add 
+        the height property for a fixed size pop up if you want.*/
+        width: 970px;
+        margin-left: -250px;
+        top:100px;
+        box-shadow: 0 5px 8px 0 rgba(0,0,0,0.2),0 7px 20px 0 rgba(0,0,0,0.17);
+        animation-name:modalopen;
+        animation-duration:1s;
+        }
+        
+        .popupBackground{
+        background-color:black;
+        opacity: 0.20;
+        filter: alpha(opacity = 20);
+        position: absolute;
+        width: 100%;
+        height: 180%;
+        top: 0;
+        left: 0;
+        z-index: 9998;
+        }
+        
+        @keyframes modalopen{
+        from{ opacity: 0}
+        to {opacity: 1}
+        }
+        
+    </style>
+    
+    <style>
+        .MainTableClass {
+        color:black !important ;
+        font-size: 15px;
+        vertical-align: middle;
+        background-color : #88C4F4 !important;
+        }
+    </style>
+    
+    <style>
+        .tooltip1 {
+        position: relative;
+        display: inline-block;
+        //border-bottom: 1px dotted black;
+        }
+        
+        .tooltip1 .tooltiptext1 {
+        visibility: hidden;
+        width: 120px;
+        background-color: black;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 5px 0;
+        
+        /* Position the tooltip */
+        position: absolute;
+        top: -5px;
+        right: 110%;
+        }
+        
+        .tooltip1 .tooltiptext1::after {
+        content: " ";
+        position: absolute;
+        top: 50%;
+        left: 100%; /* To the right of the tooltip */
+        margin-top: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: transparent transparent transparent black;
+        }
+        
+        .tooltip1:hover .tooltiptext1 {
+        visibility: visible;
+        }
+    </style>
+    
+    <style>
+        .tooltip2 {
+        position: relative;
+        display: inline-block;
+        //border-bottom: 1px dotted black;
+        }
+        
+        .tooltip2 .tooltiptext2 {
+        visibility: hidden;
+        width: 120px;
+        background-color: black;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 5px 0;
+        
+        /* Position the tooltip */
+        position: absolute;
+        top: -5px;
+        right: 110%;
+        }
+        
+        .tooltip2 .tooltiptext2::after {
+        content: " ";
+        position: absolute;
+        top: 50%;
+        left: 100%; /* To the right of the tooltip */
+        margin-top: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: transparent transparent transparent black;
+        }
+        
+        .tooltip2:hover .tooltiptext2 {
+        visibility: none;
+        }
+    </style>
+
+    <apex:form >
+        <apex:pageBlock mode="maindetail">
+            <apex:outputPanel id="createNewMainEvent">
+                <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!isNewMainEvent}"/>
+                <apex:outputPanel styleClass="custPopupTE" layout="block" rendered="{!isNewMainEvent}">
+                    <center>
+                        <apex:pageBlockSection columns="1" title="Create Event" id="MainEvent">
+                            <apex:pageMessages id="NewMainEventMsg" escape="false"/>
+                            <apex:pageBlockSection columns="2">
+                                <apex:repeat value="{!EventFields}" var="fld">
+                                    <apex:inputField value="{!massEvent[fld]}"/>
+                                </apex:repeat>
+                            </apex:pageBlockSection>
+                        </apex:pageBlockSection> 
+                        <br/><br/>
+                        <br/><br/><br/>
+                        <apex:commandButton value="Create" action="{!createMainEvents}" rerender="createNewMainEvent,MainRec,NoRecs,ToolBarComponent,NewMainEventMsg,MainBlockMsg" status="hidePopUp"/>
+                        &nbsp;&nbsp;
+                        <apex:commandButton value="Cancel" action="{!cancelMainEvents}" rerender="createNewMainEvent,MainRec,NoRecs,ToolBarComponent,NewMainEventMsg,MainBlockMsg" status="hidePopUp" immediate="true"/>
+                        &nbsp;&nbsp;
+                        <apex:actionStatus id="hidePopUp">
+                            <apex:facet name="start">
+                                <img src="/img/loading32.gif" style="width: 27px;text-align:left;margin-bottom:-8px"/>
+                            </apex:facet>
+                            <apex:facet name="stop"/>
+                        </apex:actionStatus>
+                    </center>
+                </apex:outputPanel>
+            </apex:outputPanel>
+        </apex:pageBlock>
+    </apex:form>
+    
+    <apex:form >
+        <apex:pageBlock mode="maindetail">
+            <apex:outputPanel id="createNewMainTask">
+                <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!isNewMainTask}"/>
+                <apex:outputPanel styleClass="custPopupTE" layout="block" rendered="{!isNewMainTask}">
+                    <center>
+                        <apex:pageBlockSection columns="1" title="Create Task" id="MainTask">
+                            <apex:pageMessages id="NewMainTaskMsg" escape="false"/>
+                            <apex:pageBlockSection columns="2">
+                                <apex:repeat value="{!TaskFields}" var="fld">
+                                    <apex:inputField value="{!massTask[fld]}"/>
+                                </apex:repeat>
+                            </apex:pageBlockSection>
+                        </apex:pageBlockSection> 
+                        <br/><br/>
+                        <br/><br/><br/>
+                        <apex:commandButton value="Create" action="{!createMainTasks}" rerender="createNewMainTask,MainRec,NoRecs,ToolBarComponent,NewMainTaskMsg,MainBlockMsg" status="hidePopUp"/>
+                        &nbsp;&nbsp;
+                        <apex:commandButton value="Cancel" action="{!cancelMainTasks}" rerender="createNewMainTask,MainRec,NoRecs,ToolBarComponent,NewMainTaskMsg,MainBlockMsg" status="hidePopUp" immediate="true"/>
+                        &nbsp;&nbsp;
+                        <apex:actionStatus id="hidePopUp">
+                            <apex:facet name="start">
+                                <img src="/img/loading32.gif" style="width: 27px;text-align:left;margin-bottom:-8px"/>
+                            </apex:facet>
+                            <apex:facet name="stop"/>
+                        </apex:actionStatus>
+                    </center>
+                </apex:outputPanel>
+            </apex:outputPanel>
+        </apex:pageBlock>
+    </apex:form>
+    
+    <apex:form >
+        <apex:actionFunction name="refreshpbt" reRender="MainRec,ToolBarComponent,MainBlockMsg"/>
+        <apex:outputPanel id="PickField">
+            <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!displayPicklistPopup}"/>
+            <apex:outputPanel styleClass="custPopupPick" layout="block" rendered="{!displayPicklistPopup}">
+                <center>
+                    <apex:outputLabel style="Font-weight:bold; font-size:1.5em;padding-left:-10px;" value="Select Values"/>
+                    <c:MultiSelectPicklistComponent leftlabel="Available"
+                                                    leftoption="{!PickOptions[pickedFld].ltPickOptions}"
+                                                    rightlabel="Selected"
+                                                    rightoption="{!PickOptions[pickedFld].rtPickOptions}"
+                                                    size="14" width="200px">
+                    </c:MultiSelectPicklistComponent> <br/><br/>
+                    <br/><br/><br/>
+                    <apex:commandButton value="Filter" action="{!FilterPicklistPopup}" rerender="PickField,MainTablePB" status="hidePopUp"/>&nbsp;&nbsp;
+                    <apex:commandButton value="Cancel" action="{!closePicklistPopup}" rerender="PickField,MainTablePB" status="hidePopUp"/>
+                    &nbsp;&nbsp;
+                    <apex:actionStatus id="hidePopUp">
+                        <apex:facet name="start">
+                            <img src="/img/loading32.gif" style="width: 27px;text-align:left;margin-bottom:-8px"/>
+                        </apex:facet>
+                        <apex:facet name="stop"/>
+                    </apex:actionStatus>
+                </center>
+            </apex:outputPanel>
+        </apex:outputPanel>
+    </apex:form>
+    
+    <apex:form >
+        <apex:pageBlock mode="maindetail">
+            <apex:outputPanel id="createNewMain">
+                <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!isNewMain}"/>
+                <apex:outputPanel styleClass="custPopup" layout="block" rendered="{!isNewMain}">
+                    <center>
+                        <apex:pageBlockSection columns="1" title="Create {!$ObjectType[selectedObj].Label}" id="Main">
+                            <apex:pageMessages id="NewMainMsg" escape="false"/>
+                            <apex:pageBlockSection columns="2">
+                                <apex:repeat value="{!mainObj[selectedObj]}" var="fld">
+                                    <apex:inputField value="{!mainObject[selectedObj][fld]}"/>
+                                </apex:repeat>
+                            </apex:pageBlockSection>
+                        </apex:pageBlockSection> 
+                        <br/><br/>
+                        <br/><br/><br/>
+                        <apex:commandButton value="Create" action="{!saveMain}" rerender="createNewMain,MainRec,NoRecs,ToolBarComponent,NewMainMsg,MainBlockMsg" status="hidePopUp"/>
+                        &nbsp;&nbsp;
+                        <apex:commandButton value="Cancel" action="{!cancelMain}" rerender="createNewMain,MainRec,NoRecs,ToolBarComponent,NewMainMsg,MainBlockMsg" status="hidePopUp" immediate="true"/>
+                        &nbsp;&nbsp;
+                        <apex:actionStatus id="hidePopUp">
+                            <apex:facet name="start">
+                                <img src="/img/loading32.gif" style="width: 27px;text-align:left;margin-bottom:-8px"/>
+                            </apex:facet>
+                            <apex:facet name="stop"/>
+                        </apex:actionStatus>
+                    </center>
+                </apex:outputPanel>
+            </apex:outputPanel>
+        </apex:pageBlock>
+    </apex:form>
+    
+    <apex:form id="theForm1">
+        
+        <apex:actionRegion >
+            <apex:pageBlock title="{!$ObjectType[selectedObj].Label} Records" rendered="{!AND(!showRelated, AND(isObjectSelected, true))}" id="MainTablePB" mode="maindetail">
+                <apex:pageBlockSection rendered="{!!AND(AND(!IF(selectedobj == null || selectedobj == 'None',true,false) , mainselectedFld.SIZE > 0), renderMainTable)}" id="NoFieldPB">
+                    <b> {!IF(selectedobj == null || selectedobj == 'None','No Object Selected', IF(mainselectedFld.SIZE > 0, 'No Records Found', 'No Fields Selected'))} </b>
+                </apex:pageBlockSection>
+                <apex:facet name="header">
+                    <apex:outputPanel rendered="{!renderMainTable}">
+                        <apex:actionFunction name="mnSch" action="{!instantiateMainObjLst}" reRender="MainTablePB" status="MainSearchStatus"/>
+                        <apex:outputPanel style="float:left;">
+                            <br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>
+                            <apex:outputLabel value="{!$ObjectType[selectedObj].Label} Records" style="height:25px;font-size:14;"/></b><br/><br/><br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <apex:inputText value="{!mainSearch}" html-placeholder=" Search {!$ObjectType[selectedObj].Label}" style="height:21px;" size="20" rendered="{!IF(overAllSize > 0, 'true', 'false')}" onkeypress="return mnSrch(event)"/>&nbsp;
+                            <apex:commandButton value="Search" action="{!instantiateMainObjLst}" reRender="MainTablePB" status="MainSearchStatus" style="height:25px;" rendered="{!IF(overAllSize > 0, 'true', 'false')}"/>&nbsp;
+                            <apex:actionStatus id="MainSearchStatus">
+                                <apex:facet name="start">
+                                    <img src="/img/loading32.gif" style="width:16px;text-align:left;margin-bottom:-1px"/>
+                                </apex:facet>
+                            </apex:actionStatus>
+                        </apex:outputPanel>
+                        <apex:outputPanel style="float:right;">
+                            <br/>
+                            <apex:outputPanel style="float:right;">
+                                <apex:outputLabel value="Records Per Page: " style="height:25px;" rendered="{!IF(overAllSize > 0, 'true', 'false')}"/>
+                                <apex:selectList value="{!PAGE_SIZE}"  size="1" style="width:50px;height:25px;" rendered="{!IF(overAllSize > 0, 'true', 'false')}">
+                                    <apex:selectOptions value="{!PageSizeOptions}"/>
+                                    <apex:actionsupport status="MainNewAndRefreshStatus" event="onchange" action="{!instantiateMainObjLst}" reRender="MainRec,NoRecs,ToolBarComponent,MainBlockMsg"/>
+                                </apex:selectList>&nbsp;
+                                <apex:commandButton value="New {!$ObjectType[selectedObj].Label}" action="{!showNewMain}"
+                                                    reRender="createNewMain" status="MainNewAndRefreshStatus" style="height:25px"
+                                                    disabled="{!!$ObjectType[selectedObj].Createable}"/>&nbsp;
+                                <apex:commandButton value="Refresh" action="{!RefreshMain}" reRender="MainTablePB,PickField"
+                                                    status="MainNewAndRefreshStatus" style="height:25px" rendered="{!IF(overAllSize > 0, 'true', 'false')}"/>&nbsp;
+                                <apex:actionStatus id="MainNewAndRefreshStatus">
+                                    <apex:facet name="start">
+                                        <img src="/img/loading32.gif" style="width:16px;text-align:left;margin-bottom:-1px"/>
+                                    </apex:facet>
+                                </apex:actionStatus>&nbsp;&nbsp;&nbsp;
+                            </apex:outputPanel><br/><br/><br/>
+                            <apex:outputPanel style="float:right;" rendered="{!IF(overAllSize > 0, 'true', 'false')}">
+                                
+                                <apex:outputLabel value="Filter Records By Date: " style="height:25px;"/>&nbsp;
+                                
+                                <apex:selectList size="1" value="{!dateFldPicklist}"  multiselect="false" title="Field" id="DateField" style="height:25px;"> 
+                                    <apex:selectOptions value="{!DateFieldOptions}"/>  
+                                    <apex:actionSupport event="onchange" reRender=""/>
+                                </apex:selectList>&nbsp;
+                                
+                                <apex:selectList size="1" value="{!dateFormat}"  multiselect="false" title="Filter" id="dateFormat" style="height:25px;"> 
+                                    <apex:selectOptions value="{!selectedFilterFormatForData}" />  
+                                    <apex:actionSupport action="{!RenderDateInputField}" event="onchange" reRender="myTest,dateInput"/>
+                                </apex:selectList>&nbsp;                              
+                                <apex:inputField value="{!dateObj['myDate__c']}" id="dateInput" style="height:21px;"/>
+                                
+                                <apex:commandButton value="Search" action="{!instantiateMainObjLst}"
+                                                    reRender="MainTablePB" style="height:25px;"
+                                                    status="DateStatus">
+                                </apex:commandButton>
+                                <apex:actionStatus id="DateStatus">
+                                    <apex:facet name="start">
+                                        <img src="/img/loading32.gif" style="width:16px;text-align:left;margin-bottom:-1px"/>
+                                    </apex:facet>
+                                </apex:actionStatus> 
+                                &nbsp;&nbsp;&nbsp;
+                            </apex:outputPanel>
+                        </apex:outputPanel><br/>
+                    </apex:outputPanel>
+                </apex:facet><br/><br/>
+                <apex:inlineEditSupport event="onDblClick"/>
+                <apex:pageBlockSection columns="1" rendered="{!renderMainTable}">
+                    <apex:facet name="body">
+                        <apex:outputPanel >
+                            <apex:pageBlockSection columns="1">
+                                <apex:pageMessages id="MainBlockMsg" escape="false"/>
+                                <apex:outputLabel value="No Records Found" rendered="{!!(Paging.myData.size > 0)}" id="NoRecs"/>
+                                <apex:pageBlock mode="maindetail" rendered="{!Paging.myData.size > 0}">
+                                    <div style="overflow-y:scroll;overflow-x:scroll;max-height:450px;max-width:1515px;">
+                                        <apex:pageBlockSection columns="1">
+                                            <apex:pageBlockTable value="{!Paging.myData}" 
+                                                                 var="rec" headerClass="MainTableClass"
+                                                                 first="{!Paging.offset1}"
+                                                                 rows="{!Paging.PageSize}"
+                                                                 id="MainRec" rendered="{!Paging.myData.size > 0}">
+                                                <apex:column width="4%">
+                                                    <apex:facet name="header">
+                                                        <apex:outputPanel >
+                                                            <apex:inputCheckbox onclick="checkAll(this,'checkedone')" value="{!isMainSelectAll}"/>
+                                                            <apex:commandButton image="{!$Resource.DisabledFilter}" style="width:15px;height:15px;background:#88C4F4;border:none;"
+                                                                                disabled="true"/>&nbsp;&nbsp;
+                                                            <p id="CheckedSize"></p>
+                                                        </apex:outputPanel>
+                                                    </apex:facet>
+                                                    <apex:inputCheckBox value="{!rec.isSelected}" id="checkedone">
+                                                        
+                                                    </apex:inputCheckBox>
+                                                </apex:column>
+                                                <apex:column width="5%">
+                                                    <apex:facet name="header">
+                                                        <apex:outputPanel >Child Records &nbsp;&nbsp;
+                                                            <apex:commandButton image="{!$Resource.DisabledFilter}" style="width:15px;height:15px;background:#88C4F4;border:none;"
+                                                                                disabled="true"/>&nbsp;&nbsp;
+                                                        </apex:outputPanel>
+                                                    </apex:facet>
+                                                    <apex:commandButton value="SHOW"  action="{!show}" reRender="theForm1,theForm2,theForm2Msg,MainBlockMsg" status="ShowStatus">
+                                                        <apex:param name="RecordID" value="{!rec.mainRecords.Id}" assignTo="{!recordId}"/>
+                                                    </apex:commandButton>&nbsp;
+                                                    <apex:actionStatus id="ShowStatus">
+                                                        <apex:facet name="start">
+                                                            <img src="/img/loading32.gif" style="width:16px;text-align:left;margin-bottom:-3px"/>
+                                                        </apex:facet>
+                                                    </apex:actionStatus>
+                                                </apex:column>
+                                                <apex:repeat value="{!mainselectedFld}" var="fld">
+                                                    <apex:column style="background-color:{!IF(
+                                                                        AND(selectedObj == opportunityObjectName,
+                                                                        $ObjectType[selectedObj].Fields[fld].localName == 'ForecastCategoryName'),
+                                                                        IF(rec.mainRecords[fld] == 'Omitted',
+                                                                        '#0B6FCE',
+                                                                        IF(rec.mainRecords[fld] == 'Pipeline',
+                                                                        '#78C953',
+                                                                        IF(rec.mainRecords[fld] == 'Best Case',
+                                                                        '#E27000',
+                                                                        IF(rec.mainRecords[fld] == 'Commit',
+                                                                        '#A845DC',
+                                                                        IF(rec.mainRecords[fld] == 'Closed',
+                                                                        '#F3D903',
+                                                                        ''
+                                                                        ))))),
+                                                                        IF(
+                                                                        AND(selectedObj == opportunityObjectName,
+                                                                        $ObjectType[selectedObj].Fields[fld].localName == 'CloseDate'),
+                                                                        IF(rec.mainRecords[fld] < TODAY(),
+                                                                        '#FF8784',
+                                                                        IF(rec.mainRecords[fld] < TODAY() + 9,
+                                                                        '#FABB6E',
+                                                                        ''
+                                                                        )
+                                                                        )
+                                                                        ,
+                                                                        ''
+                                                                        )
+                                                                        )};
+                                                                        color:{!IF(
+                                                                        AND(selectedObj == opportunityObjectName,
+                                                                        $ObjectType[selectedObj].Fields[fld].localName == 'ForecastCategoryName'),
+                                                                        IF(rec.mainRecords[fld] == 'Omitted',
+                                                                        'white',
+                                                                        IF(rec.mainRecords[fld] == 'Pipeline',
+                                                                        'white',
+                                                                        IF(rec.mainRecords[fld] == 'Best Case',
+                                                                        'white',
+                                                                        IF(rec.mainRecords[fld] == 'Commit',
+                                                                        'white',
+                                                                        IF(rec.mainRecords[fld] == 'Closed',
+                                                                        'black',
+                                                                        'black'
+                                                                        ))))),
+                                                                        IF(
+                                                                        AND(selectedObj == opportunityObjectName,
+                                                                        $ObjectType[selectedObj].Fields[fld].localName == 'CloseDate'),
+                                                                        IF(rec.mainRecords[fld] < TODAY(),
+                                                                        'white',
+                                                                        IF(rec.mainRecords[fld] < TODAY() + 9,
+                                                                        '#black',
+                                                                        'black'
+                                                                        )
+                                                                        )
+                                                                        ,
+                                                                        'black'
+                                                                        )
+                                                                        )};"
+                                                                 onmousemove="this.style.backgroundColor={!IF(AND(selectedObj == opportunityObjectName,OR($ObjectType[selectedObj].Fields[fld].localName == 'ForecastCategoryName',$ObjectType[selectedObj].Fields[fld].localName == 'CloseDate')), 'transparent', '')}"
+                                                                 rendered="{!$ObjectType[selectedObj].Fields[fld].Accessible}">
+                                                        <apex:facet name="header">
+                                                            <apex:outputPanel >
+                                                                <apex:param value="{!fld}" name="CheckSumFieldValue" assignTo="{!checksumfld}" />
+                                                                <apex:outputPanel >
+                                                                    <div class="{!IF(AND($ObjectType[selectedObj].Fields[fld].Type == 'currency', !ISNULL(sumOfCurrency[fld])),'tooltip1','tooltip2')}">{!$ObjectType[selectedObj].Fields[fld].Label}
+                                                                        <span class="{!IF(AND($ObjectType[selectedObj].Fields[fld].Type == 'currency', !ISNULL(sumOfCurrency[fld])),'tooltiptext1','tooltiptext2')}">{!IF(AND($ObjectType[selectedObj].Fields[fld].Type == 'currency'),('Total: $' + TEXT(sumOfCurrency[fld])),'')}</span>
+                                                                    </div>
+                                                                    <!--apex:commandLink action="{!sortData}" value="{!$ObjectType[selectedObj].Fields[fld].Label} {!IF(sortExpression==fld,IF(sortDirection='ASC','▼','▲'),'')}" id="cmdSort" reRender="MainRec,MainBlockMsg" status="showPopup">
+                                                                        <apex:param value="{!fld}" name="column" assignTo="{!sortExpression}" ></apex:param>
+                                                                    </apex:commandLink-->
+                                                                </apex:outputPanel> &nbsp;&nbsp;
+                                                                <apex:commandButton image="{!IF(isPickList[fld],IF(isFiltered[fld],$Resource.FilterApplied,$Resource.Filter),$Resource.DisabledFilter)}" style="width:15px;height:15px;background:#88C4F4;border:none;"
+                                                                                    action="{!showPicklistPopup}" reRender="PickField" disabled="{!IF(isPickList[fld],false,true)}" status="showPopup">
+                                                                    <apex:param name="PickField" value="{!fld}" assignTo="{!pickedFld}"/>
+                                                                </apex:commandButton>&nbsp;&nbsp;
+                                                                <apex:actionStatus id="showPopup">
+                                                                    <apex:facet name="start">
+                                                                        <img src="/img/loading32.gif" style="width:20px;text-align:left;margin-bottom:{!IF(isPicklist[fld],'5px;','-2px;')}"/>
+                                                                    </apex:facet>
+                                                                    <apex:facet name="stop"/>
+                                                                </apex:actionStatus>
+                                                            </apex:outputPanel>
+                                                        </apex:facet>
+                                                        <apex:outputField value="{!rec.mainRecords[fld]}" rendered="{!AND((fld == mainField), !ISBLANK(rec.mainRecords[fld]))}">
+                                                            <b>
+                                                                <apex:outputLink rendered="{!AND((fld == mainField), !ISBLANK(rec.mainRecords[fld]))}"
+                                                                                 value="/{!rec.mainRecords.id}"
+                                                                                 style="text-decoration:none;" target="_blank">&nbsp;&nbsp;➤
+                                                                </apex:outputLink>
+                                                            </b>
+                                                        </apex:outputField>
+                                                        <!--apex:outputPanel rendered="{!AND((!AND((fld == mainField), !ISBLANK(rec.mainRecords[fld]))), $ObjectType[selectedObj].Fields[fld].Type == 'phone')}">
+                                                            <input style="border-color:transparent;"  readonly="true" ondblclick="this.readOnly='';" onblur="this.readOnly='true'" type="text" value="{!rec.mainRecords[fld]}" id="ColFieldValue"/>
+                                                        </apex:outputPanel>
+                                                        <apex:outputPanel rendered="{!AND((!AND((fld == mainField), !ISBLANK(rec.mainRecords[fld]))), $ObjectType[selectedObj].Fields[fld].Type == 'phone')}">
+                                                            <input style="border-color:transparent;"  readonly="true" ondblclick="this.readOnly='';" onblur="this.readOnly='true'" type="text" value="{!rec.mainRecords[fld]}" id="ColFieldValue"/>
+                                                        </apex:outputPanel>
+                                                        <apex:outputPanel rendered="{!AND((!AND((fld == mainField), !ISBLANK(rec.mainRecords[fld]))), $ObjectType[selectedObj].Fields[fld].Type == 'phone')}">
+                                                            <input style="border-color:transparent;"  readonly="true" ondblclick="this.readOnly='';" onblur="this.readOnly='true'" type="text" value="{!rec.mainRecords[fld]}" id="ColFieldValue"/>
+                                                        </apex:outputPanel>
+                                                        <apex:outputPanel rendered="{!AND((!AND((fld == mainField), !ISBLANK(rec.mainRecords[fld]))), $ObjectType[selectedObj].Fields[fld].Type == 'phone')}">
+                                                            <input style="border-color:transparent;"  readonly="true" ondblclick="this.readOnly='';" onblur="this.readOnly='true'" type="text" value="{!rec.mainRecords[fld]}" id="ColFieldValue"/>
+                                                        </apex:outputPanel>
+                                                        <apex:outputPanel rendered="{!AND((!AND((fld == mainField), !ISBLANK(rec.mainRecords[fld]))), $ObjectType[selectedObj].Fields[fld].Type == 'phone')}">
+                                                            <input style="border-color:transparent;"  readonly="true" ondblclick="this.readOnly='';" onblur="this.readOnly='true'" type="text" value="{!rec.mainRecords[fld]}" id="ColFieldValue"/>
+                                                        </apex:outputPanel>
+                                                        <apex:outputPanel rendered="{!AND((!AND((fld == mainField), !ISBLANK(rec.mainRecords[fld]))), $ObjectType[selectedObj].Fields[fld].Type == 'phone')}">
+                                                            <input style="border-color:transparent;"  readonly="true" ondblclick="this.readOnly='';" onblur="this.readOnly='true'" type="text" value="{!rec.mainRecords[fld]}" id="ColFieldValue"/>
+                                                        </apex:outputPanel>
+                                                        <apex:outputPanel rendered="{!AND((!AND((fld == mainField), !ISBLANK(rec.mainRecords[fld]))), $ObjectType[selectedObj].Fields[fld].Type == 'phone')}">
+                                                            <input style="border-color:transparent;"  readonly="true" ondblclick="this.readOnly='';" onblur="this.readOnly='true'" type="text" value="{!rec.mainRecords[fld]}" id="ColFieldValue"/>
+                                                        </apex:outputPanel>
+                                                        <apex:outputPanel rendered="{!AND((!AND((fld == mainField), !ISBLANK(rec.mainRecords[fld]))), $ObjectType[selectedObj].Fields[fld].Type == 'phone')}">
+                                                            <input style="border-color:transparent;"  readonly="true" ondblclick="this.readOnly='';" onblur="this.readOnly='true'" type="text" value="{!rec.mainRecords[fld]}" id="ColFieldValue"/>
+                                                        </apex:outputPanel>
+                                                        <apex:outputPanel rendered="{!AND((!AND((fld == mainField), !ISBLANK(rec.mainRecords[fld]))), $ObjectType[selectedObj].Fields[fld].Type == 'phone')}">
+                                                            <input style="border-color:transparent;"  readonly="true" ondblclick="this.readOnly='';" onblur="this.readOnly='true'" type="text" value="{!rec.mainRecords[fld]}" id="ColFieldValue"/>
+                                                        </apex:outputPanel>
+                                                        <apex:outputPanel rendered="{!AND((!AND((fld == mainField), !ISBLANK(rec.mainRecords[fld]))), $ObjectType[selectedObj].Fields[fld].Type == 'phone')}">
+                                                            <input style="border-color:transparent;"  readonly="true" ondblclick="this.readOnly='';" onblur="this.readOnly='true'" type="text" value="{!rec.mainRecords[fld]}" id="ColFieldValue"/>
+                                                        </apex:outputPanel-->
+                                                        <apex:outputField value="{!rec.mainRecords[fld]}" rendered="{!!AND((fld == mainField), !ISBLANK(rec.mainRecords[fld]))}" id="ColFieldValue" />
+                                                    </apex:column>
+                                                </apex:repeat>
+                                            </apex:pageBlockTable>
+                                        </apex:pageBlockSection>
+                                    </div>
+                                </apex:pageBlock>   
+                            </apex:pageBlockSection>
+                            <c:PagingToolbar paging="{!Paging}" rerender="MainRec,NoRecs,MainBlockMsg" id="ToolBarComponent" rendered="{!Paging.myData.size > 0}"/><br/><br/>
+                            <apex:outputPanel id="MainRelatedButtonsDown" rendered="{!AND(!isNewMain, Paging.myData.size > 0)}">
+                                <apex:actionFunction name="deleteMain" action="{!deleteMainRecords}" reRender="MainTablePB" status="MassUpdateMainStatus"/>
+                                <apex:actionFunction name="updateMain" action="{!updateMainRecords}" reRender="MainTablePB" status="MassUpdateMainStatus"/>
+                                <apex:actionFunction name="taskMain" action="{!showNewMainTask}" reRender="createNewMainTask" status="MassUpdateMainStatus"/>
+                                <apex:actionFunction name="eventMain" action="{!showNewMainEvent}" reRender="createNewMainEvent" status="MassUpdateMainStatus"/>
+                                <center>
+                                    <apex:commandButton value="Create Task" onclick="return checkForCountTask();"
+                                                        reRender="MainRelatedButtonsDown"
+                                                        styleclass="commoncss" style="color:black;width:120px;margin:5px; background:#fafaf9;"
+                                                        status="MassUpdateMainStatus"/>&nbsp;&nbsp;&nbsp;
+                                    <apex:commandButton value="Delete" onclick="return checkForCountDelete();"
+                                                        styleclass="commoncss" style="color:black;width:120px;margin:5px; background:#fafaf9;"
+                                                        reRender="MainRelatedButtonsDown"/>&nbsp;&nbsp;
+                                    <apex:commandButton value="Update" onclick="return checkForCountUpdate();" action="{!updateMainRecords}"
+                                                        reRender="MainRelatedButtonsDown"
+                                                        styleclass="commoncss" style="color:black;width:120px;margin:5px; background:#fafaf9;"
+                                                        status="MassUpdateMainStatus"/>&nbsp;&nbsp;&nbsp;
+                                    <apex:commandButton value="Create Event" onclick="return checkForCountEvent();"
+                                                        reRender="MainRelatedButtonsDown"
+                                                        styleclass="commoncss" style="color:black;width:120px;margin:5px; background:#fafaf9;"
+                                                        status="MassUpdateMainStatus"/>&nbsp;&nbsp;&nbsp;
+                                    <apex:actionStatus id="MassUpdateMainStatus">
+                                        <apex:facet name="start">
+                                            <img src="/img/loading32.gif" style="width:16px;text-align:left;margin-bottom:-3px"/>
+                                        </apex:facet>
+                                    </apex:actionStatus>
+                                </center>
+                            </apex:outputPanel>
+                        </apex:outputPanel> 
+                    </apex:facet>
+                </apex:pageBlockSection>
+            </apex:pageBlock>
+        </apex:actionRegion>
+    </apex:form>
+    
+    <apex:form id="theForm2">        
+        <apex:pageBlock rendered="{!showRelated}" id="relatedRec">
+            <apex:pageMessages id="theForm2Msg" escape="false"/>
+            <apex:pageBlockSection title="PBSectionHack" rendered="false"></apex:pageBlockSection>
+            <apex:inlineEditSupport event="onDblClick"/>
+            <apex:facet name="header">
+                <apex:outputPanel >
+                    <br/>
+                    <apex:outputLink value="/{!myObj['Id']}" target="_blank" style="font-weight:bold;color:#167DD5;font-size:18px;padding-left:15px;text-decoration:none">{!myObj[mainField]}</apex:outputLink>
+                </apex:outputPanel>
+            </apex:facet>
+            <center>
+                <apex:commandButton value="BACK" action="{!hide}" reRender="theForm1,theForm2" status="HideStatus" immediate="true"
+                                    style="color:black;width:120px;margin:5px; background:#FABB6E;"/>&nbsp;&nbsp;&nbsp;&nbsp;
+                <apex:actionStatus id="HideStatus">
+                    <apex:facet name="start">
+                        <img src="/img/loading32.gif" style="width:16px;text-align:left;margin-bottom:-3px"/>
+                    </apex:facet>
+                </apex:actionStatus>
+                <br/><br/>
+            </center>
+            <apex:repeat value="{!relatedFldMapVF}" var="rlRec">
+                <apex:actionRegion >
+                    <apex:pageBlockSection title="{!$ObjectType[rlRec].label}" columns="1" collapsible="true">
+                        <apex:pageMessages id="RelatedPageMsg" escape="false"/>
+                        <apex:outputPanel id="RelatedMain">
+                            <apex:variable value="{!relatedObjLst[rlRec]}"  var="myMap"/>
+                            <apex:outputPanel style="text-align:center;" layout="block" id="RelatedButtonsUp">
+                                <apex:commandButton action="{!showNewRelated}" value="New {!$ObjectType[rlRec].label}" rendered="{!!isNewRelated[rlRec]}"
+                                                    styleclass="commoncss" style="color:black;width:120px;margin:5px; background:#fafaf9;"
+                                                    disabled="{!!$ObjectType[rlRec].Createable}" status="CreateRelatedStatus" reRender="RelatedMain,RelatedPageMsg">
+                                    <apex:param name="SaveRelated" value="{!rlRec}" assignTo="{!relatedFocusObject}"/>
+                                </apex:commandButton>
+                                &nbsp;&nbsp;&nbsp;
+                                <apex:actionStatus id="CreateRelatedStatus">
+                                    <apex:facet name="start">
+                                        <img src="/img/loading32.gif" style="width:16px;text-align:left;margin-bottom:-3px"/>
+                                    </apex:facet>
+                                </apex:actionStatus>
+                            </apex:outputPanel> 
+                            <apex:outputPanel id="RelatedRecordListPanel" rendered="{!AND(myMap.size > 0, !isNewRelated[rlRec])}">
+                                <apex:pageBlockTable value="{!relatedObjLst[rlRec]}" var="rlLst" id="rTable">
+                                    <apex:column width="4%">
+                                        <apex:facet name="header">
+                                            <apex:outputPanel >
+                                                <apex:inputCheckbox onclick="checkRAll(this,'checkedRone')" value="{!isRelatedSelectAll[rlRec]}"/>&nbsp;&nbsp;
+                                                <p id="CheckedRSize"></p>
+                                            </apex:outputPanel>
+                                        </apex:facet>
+                                        <apex:inputCheckBox value="{!rlLst.isSelected}" id="checkedRone">
+                                            
+                                        </apex:inputCheckBox>
+                                    </apex:column>
+                                    <apex:repeat value="{!relatedFldMapVF[rlRec]}" var="fld"> 
+                                        <apex:column style="background-color:{!IF(
+                                                                        AND(rlRec == opportunityObjectName,
+                                                                        $ObjectType[rlRec].Fields[fld].localName == 'ForecastCategoryName'),
+                                                                        IF(rlLst.relatedRecords[fld] == 'Omitted',
+                                                                        '#0B6FCE',
+                                                                        IF(rlLst.relatedRecords[fld] == 'Pipeline',
+                                                                        '#78C953',
+                                                                        IF(rlLst.relatedRecords[fld] == 'Best Case',
+                                                                        '#E27000',
+                                                                        IF(rlLst.relatedRecords[fld] == 'Commit',
+                                                                        '#A845DC',
+                                                                        IF(rlLst.relatedRecords[fld] == 'Closed',
+                                                                        '#F3D903',
+                                                                        ''
+                                                                        ))))),
+                                                                        IF(
+                                                                        AND(rlRec == opportunityObjectName,
+                                                                        $ObjectType[rlRec].Fields[fld].localName == 'CloseDate'),
+                                                                        IF(rlLst.relatedRecords[fld] < TODAY(),
+                                                                        '#FF8784',
+                                                                        IF(rlLst.relatedRecords[fld] < TODAY() + 9,
+                                                                        '#FABB6E',
+                                                                        ''
+                                                                        )
+                                                                        )
+                                                                        ,
+                                                                        ''
+                                                                        )
+                                                                        )};
+                                                                        color:{!IF(
+                                                                        AND(rlRec == opportunityObjectName,
+                                                                        $ObjectType[rlRec].Fields[fld].localName == 'ForecastCategoryName'),
+                                                                        IF(rlLst.relatedRecords[fld] == 'Omitted',
+                                                                        'white',
+                                                                        IF(rlLst.relatedRecordss[fld] == 'Pipeline',
+                                                                        'white',
+                                                                        IF(rlLst.relatedRecords[fld] == 'Best Case',
+                                                                        'white',
+                                                                        IF(rlLst.relatedRecords[fld] == 'Commit',
+                                                                        'white',
+                                                                        IF(rlLst.relatedRecords[fld] == 'Closed',
+                                                                        'black',
+                                                                        'black'
+                                                                        ))))),
+                                                                        IF(
+                                                                        AND(rlRec == opportunityObjectName,
+                                                                        $ObjectType[rlRec].Fields[fld].localName == 'CloseDate'),
+                                                                        IF(rlLst.relatedRecords[fld] < TODAY(),
+                                                                        'white',
+                                                                        IF(rlLst.relatedRecords[fld] < TODAY() + 9,
+                                                                        '#black',
+                                                                        'black'
+                                                                        )
+                                                                        )
+                                                                        ,
+                                                                        'black'
+                                                                        )
+                                                                        )};"
+                                                     onmousemove="this.style.backgroundColor={!IF(AND(rlRec == opportunityObjectName,OR($ObjectType[rlRec].Fields[fld].localName == 'ForecastCategoryName',$ObjectType[rlRec].Fields[fld].localName == 'CloseDate')), 'transparent', '')}"
+                                                     rendered="{!$ObjectType[rlRec].Fields[fld].Accessible}">
+                                            <apex:facet name="header">
+                                                {!$ObjectType[rlRec].Fields[fld].Label}
+                                            </apex:facet>
+                                            <apex:outputField value="{!rlLst.relatedRecords[fld]}"/>
+                                        </apex:column>
+                                    </apex:repeat>
+                                </apex:pageBlockTable>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!AND(myMap.size = 0, !isNewRelated[rlRec])}">
+                                No Records Found
+                            </apex:outputPanel>
+                            <apex:outputPanel id="NewRelatedRecordPanel" title="Insert {!rlRec} Record" rendered="{!isNewRelated[rlRec]}">
+                                <center>
+                                    <apex:commandButton action="{!SaveRelated}" value="Save" rendered="{!isNewRelated[rlRec]}"
+                                                        styleclass="commoncss" style="color:black;width:120px;margin:5px; background:#fafaf9;"
+                                                        status="SaveRelatedStatus" reRender="RelatedMain,RelatedPageMsg">
+                                        <apex:param name="SaveRelated" value="{!rlRec}" assignTo="{!relatedFocusObject}"/>
+                                    </apex:commandButton>
+                                    <apex:commandButton action="{!CancelRelated}" value="Cancel" rendered="{!isNewRelated[rlRec]}"
+                                                        styleclass="commoncss" style="color:black;width:120px;margin:5px; background:#fafaf9;"
+                                                        status="SaveRelatedStatus" reRender="RelatedMain,RelatedPageMsg" immediate="true">
+                                        <apex:param name="CancelRelated" value="{!rlRec}" assignTo="{!relatedFocusObject}"/>
+                                    </apex:commandButton>&nbsp;&nbsp;&nbsp;
+                                    <apex:actionStatus id="SaveRelatedStatus">
+                                        <apex:facet name="start">
+                                            <img src="/img/loading32.gif" style="width:16px;text-align:left;margin-bottom:-3px"/>
+                                        </apex:facet>
+                                    </apex:actionStatus>
+                                </center>
+                                <apex:pageBlockSection >
+                                    <apex:repeat value="{!relatedObj[rlRec]}" var="fld1">
+                                        <apex:inputField value="{!relatedObjectLst[rlRec][fld1]}"/>
+                                    </apex:repeat>
+                                </apex:pageBlockSection>
+                            </apex:outputPanel>
+                            <apex:outputPanel id="RelatedButtonsDown" rendered="{!AND(myMap.size > 0, !isNewRelated[rlRec])}">
+                                <center>
+                                    <apex:commandButton value="Delete" action="{!deleteRelatedRecords}" reRender="RelatedMain,RelatedPageMsg"
+                                                        styleclass="commoncss" style="color:black;width:120px;margin:5px; background:#fafaf9;" status="MassUpdateRelatedStatus">
+                                        <apex:param name="DeleteParam" value="{!rlRec}" assignTo="{!relatedFocusObject}"/>
+                                    </apex:commandButton>&nbsp;&nbsp;
+                                    <apex:commandButton value="Update" action="{!updateRelatedRecords}" reRender="RelatedMain,RelatedPageMsg"
+                                                        styleclass="commoncss" style="color:black;width:120px;margin:5px; background:#fafaf9;" status="MassUpdateRelatedStatus">
+                                        <apex:param name="UpdateParam" value="{!rlRec}" assignTo="{!relatedFocusObject}"/>
+                                    </apex:commandButton>&nbsp;&nbsp;&nbsp;
+                                    <apex:actionStatus id="MassUpdateRelatedStatus">
+                                        <apex:facet name="start">
+                                            <img src="/img/loading32.gif" style="width:16px;text-align:left;margin-bottom:-3px"/>
+                                        </apex:facet>
+                                    </apex:actionStatus>
+                                </center>
+                            </apex:outputPanel>             
+                        </apex:outputPanel>
+                    </apex:pageBlockSection>
+                </apex:actionRegion>
+            </apex:repeat> 
+        </apex:pageBlock>
+    </apex:form>
+
+    
+    <script>
+    function mnSrch(e){               
+        if(window.event){                    
+            key = window.event.keyCode;     //IE               
+        } 
+        else{                    
+            key = e.which;     //firefox               
+        }               
+        if(key == 13) {                    
+            mnSch();                    
+            return false;               
+        } else{                    
+            return true;               
+        }          
+    }     
+    </script>
+    
+    <script>
+    function checkAll(cb,cbid)
+    {
+        var inputElem = document.getElementsByTagName("input");
+        var count = 0;
+        for(var i=0; i<inputElem.length; i++)
+        {             
+            if(inputElem[i].id.indexOf(cbid)!=-1){                                        
+                inputElem[i].checked = cb.checked;
+                count = count + 1;
+            }
+        }
+        //document.getElementById("CheckedSize").innerHTML = count;
+    }
+    </script>
+    
+    <script>
+    function checkRAll(cb,cbid)
+    {
+        var container = cb;
+        while (container.tagName != "TABLE") {
+            container = container.parentNode;
+        }
+     
+        var inputElem = container.getElementsByTagName("input");
+        var count = 0;
+        for(var i=0; i<inputElem.length; i++)
+        {             
+            if(inputElem[i].id.indexOf(cbid)!=-1){                                        
+                inputElem[i].checked = cb.checked;
+                count = count + 1;
+            }
+        }
+        //document.getElementById("CheckedRSize").innerHTML = count;
+    }
+    </script>
+    
+    <script>
+    function checkForCountDelete()
+    {
+        var inputElem = document.getElementsByTagName("input");
+        var count = 0;
+        for(var i=0; i<inputElem.length; i++)
+        {             
+            if(inputElem[i].checked == true){
+                    count++;
+            }
+        }
+        if(count==0)
+        {
+            window.alert("No record selected");
+        }
+        else
+        {
+            deleteMain();
+        }
+    }
+    
+    function checkForCountUpdate()
+    {
+        var inputElem = document.getElementsByTagName("input");
+        var count = 0;
+        for(var i=0; i<inputElem.length; i++)
+        {             
+            if(inputElem[i].checked == true){
+                    count++;
+            }
+        }
+        if(count==0)
+        {
+            window.alert("No record selected");
+        }
+        else
+        {   console.log('count = ' + count);
+            updateMain();
+        }
+    }
+    
+    function checkForCountTask()
+    {
+        var inputElem = document.getElementsByTagName("input");
+        var count = 0;
+        for(var i=0; i<inputElem.length; i++)
+        {             
+            if(inputElem[i].checked == true){
+                    count++;
+            }
+        }
+        if(count==0)
+        {
+            window.alert("No record selected");
+        }
+        else
+        {
+            taskMain();
+        }
+    }
+    
+    function checkForCountEvent()
+    {
+        var inputElem = document.getElementsByTagName("input");
+        var count = 0;
+        for(var i=0; i<inputElem.length; i++)
+        {             
+            if(inputElem[i].checked == true){
+                    count++;
+            }
+        }
+        if(count==0)
+        {
+            window.alert("No record selected");
+        }
+        else
+        {
+            eventMain();
+        }
+    }
+    </script>
+    
+    <script>
+    var colField = document.getElementById("ColFieldValue");
+    closeBtnEvent.addEventListener("onmouseover", removeOverOpty);
+    function removeOverOpty(){
+        colField.style.backgroundColor= "green";
+    }   
+    </script>
+
+</apex:page>

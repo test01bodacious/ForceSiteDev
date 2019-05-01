@@ -1,0 +1,90 @@
+<apex:component controller="GlobalSearchComponentController" allowDML="true">
+    
+    <apex:attribute name="profile" assignTo="{!profileName}" type="string" required="true" description="searchable Text"/>
+    <apex:attribute name="searchtext" assignTo="{!searchTerm}" type="string" required="true" description="searchable Text"/>
+    
+    <apex:outputPanel id="globalPanelId" layout="block" style="position:relative;">
+        <apex:pageMessages /><br/><br/>
+        <apex:repeat value="{!globalList}" var="globalobjLst" >
+            <apex:outputPanel layout="block"  rendered="{!!customUser['isTable__c']}" id="RelatedRecs"> 
+                <apex:pageBlockSection title="{!$ObjectType[globalobjLst.wObjName].labelPlural}  ({!globalobjLst.count}) "  columns="1"
+                                       rendered="{!IF(globalobjLst.count==0, false, true)}" >
+                    <apex:pageBlockTable value="{!globalobjLst.wObjLst}" var="wrapObj" id="thetable">
+                        <apex:column headerValue="Action" width="4%">
+                            <apex:outputPanel layout="block">
+                                <apex:commandLink value="Edit" style="color:blue; text-decoration:none;" 
+                                                  action="{!editRecord}" onclick="setObjAndRecId('{!wrapObj['id']}', '{!$ObjectType[globalobjLst.wObjName].name}', '{!dummyObjName}', 'edit');"
+                                                  reRender="globalPanelId" status="Lightning_Spinner"/>&nbsp;|&nbsp;
+                                <apex:commandLink value="Delete" style="color:blue; text-decoration:none;"
+                                                  action="{!deleteRecord}" onclick="setObjAndRecId('{!wrapObj['id']}', '{!$ObjectType[globalobjLst.wObjName].name}', '{!dummyObjName}', 'delete');"/>
+                                <apex:inputHidden id="objVariable" value="{!dummyObjName}"/>
+                                <apex:inputHidden id="recVariable" value="{!delRecordId}"/>
+                                
+                            </apex:outputPanel>
+                            <script>
+                                function setObjAndRecId(recordId, obj, isConfirm, mode){
+                                    if(mode == 'edit'){
+                                        
+                                        document.getElementById('{!$Component.objVariable}').value = obj;
+                                        document.getElementById('{!$Component.recVariable}').value = recordId;
+                                        return;
+                                    }
+                                    // var txt;
+                                    // var r = confirm("Are you Sure!");
+                                    // if (r == true) {
+                                    //     document.getElementById('{!$Component.objVariable}').value = obj;
+                                    //     document.getElementById('{!$Component.recVariable}').value = recordId;
+                                        
+                                    //     return ;
+                                    // } else {
+                                    //     document.getElementById('{!$Component.confirmVariable}').value = false;
+                                    // }
+                                }
+                                </script>
+                        </apex:column>
+                        <apex:column width="2%" headerValue="Details" > 
+                            <apex:commandButton value="Open" image="{!$Resource.OpenRecord}" onclick="setObjAndRecId('{!wrapObj['id']}', '{!$ObjectType[globalobjLst.wObjName].name}', '{!dummyObjName}', 'edit');"
+                                                action="{!showRelatedList}" style="border:none !important; border-radius: 50% !important;height:18px !important; width:18px !important;background-size: cover !important;outline:none;"/>
+                        </apex:column>
+                        <apex:repeat value="{!globalobjLst.wFldlst}" var="wfldName">
+                            
+                            <apex:column headerValue="{!$ObjectType[globalobjLst.wObjName].Fields[wfldName].Label}"
+                                         style="width:10%">
+                                
+                                <apex:outputField value="{!wrapObj[wfldName]}"/>
+                            </apex:column>
+                        </apex:repeat>
+                        
+                    </apex:pageBlockTable>
+                    
+                    <center>
+                        <apex:actionStatus id="Lightning_Spinner">
+                            <apex:facet name="start">
+                                <c:LightningSpinner />
+                            </apex:facet>
+                        </apex:actionStatus>
+                        <apex:commandLink value="Show more" action="{!showMore}"  onclick="setVariable('{!$ObjectType[globalobjLst.wObjName].name}');"
+                                          reRender="globalPanelId" rendered="{!IF(globalobjLst.count >3, true, false)}" status="Lightning_Spinner"
+                                          style="color:blue;"/>
+                        
+                        <apex:inputHidden id="hdnVariable" value="{!objName}"/>
+                        <script>
+                        function setVariable(recordId){
+                            
+                            document.getElementById('{!$Component.hdnVariable}').value = recordId;
+                        }
+                        </script>
+                    </center>
+                </apex:pageBlockSection>  
+            </apex:outputPanel>
+        </apex:repeat>
+        <apex:outputpanel rendered="{!customUser['isTable__c']}">
+            <c:PaginationComponent typeOfQuery="SOSL" recordquery="{!query}" fieldList="{!fieldList}" objectName="{!objName}" QLimit="2000" 
+                                   profile="{!profileName}"/>
+        </apex:outputpanel>
+        <apex:outputPanel rendered="{!customUser['isCreate__c']}" id="createrecordid">
+            <c:CreateRecordComponent objectName="{!dummyObjName}"  recordId="{!delRecordId}" />
+        </apex:outputPanel>
+    </apex:outputPanel>
+    
+</apex:component>

@@ -1,0 +1,10 @@
+<apex:page controller="CreateSectionPageController" >
+<apex:form >
+    <apex:pageMessages />
+    <apex:commandButton value="Insert Sections" action="{!initSection}"/>
+   <apex:repeat value=" {!sectionLst}" var="sec">
+            {!sec}<br/>
+          
+   </apex:repeat>
+</apex:form>
+</apex:page>

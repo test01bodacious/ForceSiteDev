@@ -1,0 +1,40 @@
+<apex:component >
+    <apex:stylesheet value="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
+    <head>
+        <!--  Title -->
+        <title>Project 03: Error 404 Cat Experiment</title>						
+    </head>
+    <body>
+        <!-- Logo -->
+        <div class="logo">
+            <center> 
+            <apex:image url="{!$Resource.Opps}" height="300px;" width="100%"/>
+            </center>
+        </div>
+        <!--  Page -->
+        
+    </body>
+    <style>
+        .logo{
+        position:absolute;
+        z-index:1;
+        width:100%;
+        }
+        .logo img{
+        padding-top: 20px;
+        width:300px;
+        }	
+        .titulo h1{ 
+        margin-top:220px;
+        color: black;
+        font-size: 160px;
+        font-weight: bold ;
+        font-family: 'Ubuntu', sans-serif;
+        }
+        .fondo{
+        height: 100%;
+        position:relative;
+        text-align:center;
+        }
+    </style>
+</apex:component>
