@@ -1,0 +1,5 @@
+<apex:page controller="TestVFPageController">
+    <apex:form >
+     <c:createTaskAndEventComponent objectName="{!taskEventObj}" records="{!recordIdLst}" />
+    </apex:form>
+</apex:page>

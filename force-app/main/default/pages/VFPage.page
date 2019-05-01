@@ -1,0 +1,28 @@
+<apex:page Controller="TaskController" showHeader="false">
+<apex:form >
+<apex:pageBlock title="Create {!$ObjectType[selectedObj].Label}" id="CreateRecords"  >
+            <apex:pageMessages escape="false"/>
+            <apex:inlineEditSupport event="onDblClick"/>
+            <apex:pageBlockSection columns="2" title="Create Contact" showHeader="false">
+                <apex:variable var="stlin" value="border-left:3px solid red;"/>
+                <apex:repeat value="{!MainList}" var="lst">
+                    <apex:selectList value="{!lst.selectedpickvalue1}" size="1" label="{!lst.labl}"
+                                    
+                                     rendered="{!IF($ObjectType[selectedObj].Fields[lst.selctedObjFldApi].Type=='picklist', true,false)}">
+                        <apex:selectOptions value="{!lst.selectOptionsValue}" />
+                    </apex:selectList>
+                    
+                    <apex:inputfield value="{!lst.sampleobj[lst.samplefldType]}" label="{!lst.labl}"
+                                     
+                                     rendered="{!IF($ObjectType[selectedObj].Fields[lst.selctedObjFldApi].Type=='picklist', false,true)}" />                   
+                </apex:repeat>  
+            </apex:pageBlockSection>
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Save" action="{!saveRecord}" reRender="Records"/>&nbsp;&nbsp;
+                <apex:commandButton value="Cancel" action="{!cancelRecord}" reRender="Records" immediate="true"/>
+                <apex:commandButton value="Refresh" action="{!refresh}"  reRender="Records"/>
+            </apex:pageBlockButtons>
+        </apex:pageBlock>
+</apex:form>
+
+</apex:page>

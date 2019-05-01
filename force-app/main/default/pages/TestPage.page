@@ -1,0 +1,7 @@
+<apex:page showHeader="false" cache="false">
+    <apex:form >
+        <apex:pageMessages />
+        <c:ChatterComponent />
+        
+    </apex:form>
+</apex:page>

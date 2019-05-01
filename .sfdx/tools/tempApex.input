@@ -1,0 +1,3 @@
+SetProfileSecurityBatch sPro = new SetProfileSecurityBatch(new List<String>{'Account', 'Contact'});
+List<Sobject> sobj = [SELECT Name FROM Profile__c];
+Database.executeBatch(sPro);

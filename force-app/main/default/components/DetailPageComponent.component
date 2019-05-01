@@ -1,0 +1,81 @@
+<apex:component controller="DetailPageComponentController" allowDML="true">
+    <apex:attribute name="objectName" type="String" description="The name of the object" required="true" assignTo="{!objName}"/>
+    <apex:attribute name="RecordId" type="String" description="The id of the record whose related records are to be displayed"
+                    required="true" assignTo="{!recId}"/>
+    
+    <apex:outputPanel layout="block" id="DetailComp">
+        <script>
+        j$ = jQuery.noConflict();  
+        j$(document).ready(function(){
+            try{
+                j$(".pbSubheader").css("text-align", "left");
+                j$(".pbSubheader").css("background-color", "#F3F2F2");
+                j$(".pbSubheader").css("height", "35px");
+                j$(".pbSubheader").css("line-height", "35px");
+                j$(".pbSubheader").css("border-style", "none");
+                j$(".pbSubheader").css("border-radius", "10px");
+                j$(".pbSubheader").css("font-size", "12px");
+                j$(".pbSubheader").css("color", "grey");
+                j$(".pbSubheader").css("padding-left", "15px");
+                j$(".hideListButton").css("display", "none");
+            }catch(err){
+                alert(err.message);
+            }
+        });
+        </script>
+        <div Class="bPageBlock brandSecondaryBrd bDetailBlock">
+            <apex:outputpanel id="createRecord"  styleClass="outputpanelclass" layout="block" >
+                <apex:pageMessages id="PgMsg" escape="false"/>
+                <apex:repeat value="{!layoutSections}" var="layoutSection">
+                    <apex:pageBlockSection title="{!layoutSection.Name}" columns="{!layoutSection.columns}">
+                        <apex:repeat value="{!layoutSection.layoutFields}" var="fld">
+                            <apex:outputField value="{!record[fld.ApiName]}"/> 
+                        </apex:repeat>
+                    </apex:pageBlockSection>
+                </apex:repeat>
+            </apex:outputpanel>
+            <c:CreateRecordComponent recordId="{!recId}" objectName="{!objName}" rendered="{!detailMode == 'input'}"/>
+        </div>
+        <center >
+            <apex:actionStatus id="LightningSpinner">
+                <apex:facet name="start">
+                    <c:LightningSpinner />
+                </apex:facet>
+            </apex:actionStatus>
+            <apex:commandButton value="Edit"  styleclass="buttonSave" status="LightningSpinner" reRender="DetailComp">
+                <apex:param name="inp1" value="input" assignTo="{!detailMode}"/>
+            </apex:commandButton>&nbsp;&nbsp; 
+        </center>
+    </apex:outputPanel>
+    
+    <style type="text/css">
+        .buttonSave{
+        color:white !important;
+        background:#2B547E !important;
+        width:100px !important;
+        height:35px !important;
+        font-size:16px !important;
+        }
+        .buttonCancel{
+        color:white !important;
+        background:#6D7B8D !important;
+        width:100px !important;
+        height:35px !important;
+        font-size:16px !important;
+        }
+        .outputpanelclass{
+
+            height:800px !important;
+            overflow:scroll !important;
+        }
+
+        @media screen and (max-height: 600px) {
+            .outputpanelclass{
+                height:400px !important;
+                overflow:scroll !important;
+            }
+        
+        }
+        
+    </style>
+</apex:component>

@@ -1,0 +1,60 @@
+<apex:page >
+    <apex:includeScript value="{!$Resource.JQuery}"/>
+    <apex:includeScript value="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.2.min.js"/>
+    <apex:form >
+        
+        <apex:pageBlock >
+            <apex:pageBlockSection columns="1">
+                <apex:inlineEditSupport />
+                <script>
+                jQuery(document).ready(function($) {
+                    // Pull 10 Accounts via the REST API
+                    $.ajax('/v44.0/sobjects/Account/listviews/00B0b000007mYsJ/results',
+                           {
+                               beforeSend: function(xhr) {
+                                   // Set the OAuth header from the session ID
+                                   xhr.setRequestHeader('Authorization', 'Bearer {!$Api.Session_ID}');
+                               },
+                               success: function(response) {
+                                   // We got 'em - append our records to the HTML list
+                                   $.each(response.records, function(index, record) {
+                                       alert(response.records);
+                                       /*var accTable = j$("#accountTable").DataTable({
+                               record: record,
+                               columns: [
+                               			{'record' : 'Name'},
+                                        {'record' : 'Phone'},
+                                        {'record' : 'Industry'},
+                                        {'record' : 'Rating'},
+                               ]
+                           }); */
+                                       //$('#accountList').append('<apex:outputText value="'+record.Name+'"/><br/>');
+                           });
+                       },
+                       error: function(jqXHR, textStatus, errorThrown) {
+                           // Oops - what went wrong?
+                           alert(jqXHR.status + ': ' + errorThrown);
+                       }
+                   }
+                  );
+        });
+                </script>
+                
+                <h1>Account List</h1>
+                <br/>
+                <ul id="accountList">
+                </ul>
+                <!--table id="accountTable">
+                <thead>
+                <tr>
+                <th> Account Name </th>
+                <th> Phone </th>
+                <th> Industry </th>
+                <th> Rating </th>
+                </tr>
+                </thead>
+                </table-->
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

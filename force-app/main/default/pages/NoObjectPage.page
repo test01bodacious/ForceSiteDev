@@ -1,0 +1,44 @@
+<apex:page >
+    
+    <style>
+        body {
+        background: #141414;
+        font-family: Verdana, Sans-serif, arial; 
+        }
+        .wrapper {
+        width:90%;
+        margin:20px auto;
+        }
+        hgroup {
+        text-align: center;
+        line-height:1.8em;
+        }
+        header h1 {
+        color: #1f77d7;
+        font-size:1.5em;
+        }
+        header h2 {
+        color:#959595;
+        font-size:0.75em;
+        }
+        article h1 {
+        font-size: 2.5em;
+        color: #000000;
+        //color: #1f77d7;
+        margin-bottom:.5em;
+        }
+        article p {
+        color: #959595;
+        }
+    </style>
+    
+    <div class="wrapper">   
+        <div class="content">
+            <article>
+                <h1>No Object named {!$CurrentPage.parameters.ObjectName}!</h1>
+                <p>The object named {!$CurrentPage.parameters.ObjectName} is not found in your org</p>
+            </article>
+        </div>
+    </div>
+    
+</apex:page>

@@ -1,0 +1,18 @@
+<apex:page showHeader="false" cache="false">
+    <apex:form >
+        <c:RecordList objectName="account"/>
+        <!--apex:outputpanel rendered="{!!IF($CurrentPage.parameters.userId==null, true, false)}">
+            Opps!!!!! You are logout!
+        </apex:outputpanel>
+        <apex:outputpanel rendered="{!!IF($CurrentPage.parameters.userId==null, false, null)}">
+            <!--c:HeaderComponent userId="{!$CurrentPage.parameters.userId}"/>
+            <c:CreateRecord objectName="{!$CurrentPage.parameters.object}" 
+                            rendered="{!IF($CurrentPage.parameters.Functionality=='CR', true, false)}" 
+                            uId="{!$CurrentPage.parameters.userId}" />
+            
+            <c:RecordList objectname="{!$CurrentPage.parameters.object}" 
+                          uId="{!$CurrentPage.parameters.userId}" 
+                          rendered="{!IF($CurrentPage.parameters.Functionality=='VE', true, false)}"/>
+        </apex:outputpanel-->
+    </apex:form>
+</apex:page>
