@@ -124,14 +124,14 @@ public class LayoutDescriberHelper {
                             Map<String, Accessibility.FieldAccess> fldAccess = adjustFieldAccessibilityMapwithoutNameSpace(new FieldName(objName.toLowerCase() + '.' + apiname.toLowerCase(), objName.toLowerCase() + '.' + apiName.toLowerCase()));
                             
                             if(ls.Name != '' || layoutSections.size() == 1) {
-                                if(fldAccess.get(objName.toLowerCase() + '.' + apiName.toLowerCase()).hasReadAccess){
+                                //if(fldAccess.get(objName.toLowerCase() + '.' + apiName.toLowerCase()).hasReadAccess){
                                     ls.layoutFields.add(lf);
-                                }
+                                //}
                             }                               
                             else if(layoutSections.size() - 2 >= 0)
-                                if(fldAccess.get(objName.toLowerCase() + '.' + apiName.toLowerCase()).hasReadAccess){
+                                //if(fldAccess.get(objName.toLowerCase() + '.' + apiName.toLowerCase()).hasReadAccess){
                                     layoutSections.get(layoutSections.size() - 2).layoutFields.add(lf);
-                                }
+                               // }
                             priorFieldLayoutAdded = true;
                         }else
                             priorFieldLayoutAdded = false;
@@ -201,6 +201,7 @@ public class LayoutDescriberHelper {
         public Boolean isPlaceHolder {get;set;}        
         public String ApiName {get;set;}
         public Boolean editableField {get;set;}
+         public Integer fieldCount {get;set;}
         
 
     }
@@ -359,8 +360,9 @@ public class LayoutDescriberHelper {
     
     @testVisible Static  Map<String, Accessibility.FieldAccess> adjustFieldAccessibilityMapwithoutNameSpace(FieldName fld){
         Accessibility.FieldAccess fldaccess=new Accessibility.FieldAccess();
-        
+        System.debug(fld);
         if( !reqFld.contains(fld.fieldNameWithoutNamespace.toLowerCase())){
+            
             string f = getParentObjectField(fld.fieldNameWithNamespace).toLowerCase();
             if(!fieldAccessMap.containsKey(f)){
                 fldaccess.hasReadAccess = false;
@@ -381,8 +383,11 @@ public class LayoutDescriberHelper {
             fldaccess.hasEditAccess = true; // Undefined???????????????
             fieldAccessMap.put(fld.fieldNameWithoutNamespace.toLowerCase(), fldaccess);
         }
+       
         return fieldAccessMap;
     }
+    
+    
     
     public  Static String getParentObjectField(String fld){
         String newFld = fld;

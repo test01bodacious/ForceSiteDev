@@ -293,6 +293,9 @@
             footer a {
                 display: block;
             }
+            .responsivebtn{
+                
+            }
         }
     </style>
     
@@ -330,7 +333,7 @@
                         <apex:commandButton value="Sign in with Google" image="{!$Resource.GoogleSignIn}"
                             action="{!connect}" reRender="LoginPage"
                             style="padding-left:30px;top:10px;background:transparent;border:none;outline:none;"
-                            rendered="{!!isLoggedIn}" />
+                            rendered="{!!isLoggedIn}" styleClass="responsivebtn"/>
                     </nav>
                 </div>
             </header>

@@ -18,8 +18,15 @@
                         background-color: lightblue;
                 }
             </style>
-    <apex:form >
-        <apex:pageBlock title="Select Page Layouts" mode="maindetail" id="PageLayoutSelection">
+    <apex:form id="formid">
+        <apex:messages />
+        <apex:outputPanel rendered="{!!isPageLayoutInserted}">
+          <center>
+                <apex:commandButton value="Refresh" action="{!refresh}" reRender="formid"/>
+          </center>
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!isPageLayoutInserted}">
+            <apex:pageBlock title="Select Page Layouts" mode="maindetail" id="PageLayoutSelection">
             <apex:pageMessages />
            <apex:outputPanel layout="block" styleClass="main" >
             <apex:repeat value="{!proRtMap}" var="objName">
@@ -53,5 +60,6 @@
                    
             </center>
         </apex:pageBlock>
+        </apex:outputPanel>
     </apex:form>
 </apex:page>

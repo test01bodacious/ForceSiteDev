@@ -148,7 +148,12 @@
     }
     
     public Boolean isRequired(String obj, String fld){
-        return !Schema.getGlobalDescribe().get(obj).getDescribe().fields.getMap().get(fld).getDescribe().isNillable();
+        Schema.DescribeFieldResult fldDescribe = Schema.getGlobalDescribe().get(obj).getDescribe().fields.getMap().get(fld).getDescribe();
+        if (fldDescribe.getType() == Schema.DisplayType.BOOLEAN) {
+            return false;
+        }else {
+            return !fldDescribe.isNillable();
+        }
     }    
     
     public class FieldName{
@@ -186,6 +191,7 @@
             accessibility.Fieldaccessibility.put(fp.Field.toLowerCase() , fldaccess);
         }
         adjustFieldAccessibilityMapwithoutNameSpace(accessibility.Fieldaccessibility);
+        checkForAddressField( accessibility.Fieldaccessibility);
     }
     
     @testVisible void initFieldsWithoutNameSpace (){
@@ -208,8 +214,8 @@
     }
     
     @testVisible void adjustFieldAccessibilityMapwithoutNameSpace(Map<String, Accessibility.FieldAccess> fieldAccessMap){
-        
         List<String> reqFld = getRequiredFields();
+        
         for(FieldName fld: permittedfieldList){
             Accessibility.FieldAccess fldaccess=new Accessibility.FieldAccess();
             if( !reqFld.contains(fld.fieldNameWithoutNamespace.toLowerCase())){
@@ -235,6 +241,55 @@
             }
             
         }
+    }
+
+    public static void checkForAddressField(Map<String, Accessibility.FieldAccess> fieldAccessMap){
+        Accessibility.FieldAccess fldaccess=new Accessibility.FieldAccess();
+       
+             for(String fld : fieldAccessMap.keySet()){
+     
+                 if(fld.contains('billingaddress')){
+
+                    fldaccess.hasReadAccess = fieldAccessMap.get(fld).hasReadAccess; 
+                    fldaccess.hasEditAccess = fieldAccessMap.get(fld).hasEditAccess;
+                    fieldAccessMap.put('bllingstreet', fldaccess);
+                    fieldAccessMap.put('billingcity', fldaccess);
+                    fieldAccessMap.put('billingstate', fldaccess);
+                    fieldAccessMap.put('billingpostalcode', fldaccess);
+                    fieldAccessMap.put('billingcountry', fldaccess);
+
+                    } else if(fld.contains('shippingaddress')){
+
+                        fldaccess.hasReadAccess = fieldAccessMap.get(fld).hasReadAccess; 
+                        fldaccess.hasEditAccess = fieldAccessMap.get(fld).hasEditAccess;
+                        fieldAccessMap.put('shippingstreet', fldaccess);
+                        fieldAccessMap.put('shippingcity', fldaccess);
+                        fieldAccessMap.put('shippingstate', fldaccess);
+                        fieldAccessMap.put('shippingpostalcode', fldaccess);
+                        fieldAccessMap.put('shippingcountry', fldaccess);
+                        
+                    } else if (fld.contains('mailingaddress')) {
+                        
+                        fldaccess.hasReadAccess = fieldAccessMap.get(fld).hasReadAccess;
+                        fldaccess.hasEditAccess = fieldAccessMap.get(fld).hasEditAccess;
+                        fieldAccessMap.put('mailingstreet', fldaccess);
+                        fieldAccessMap.put('mailingcity', fldaccess);
+                        fieldAccessMap.put('mailingstate', fldaccess);
+                        fieldAccessMap.put('mailingpostalcode', fldaccess);
+                        fieldAccessMap.put('mailingcountry', fldaccess);
+                        
+                    } else if(fld.contains('otheraddress')) {
+
+                        fldaccess.hasReadAccess = fieldAccessMap.get(fld).hasReadAccess; 
+                        fldaccess.hasEditAccess = fieldAccessMap.get(fld).hasEditAccess;
+                        fieldAccessMap.put('otherstreet', fldaccess);
+                        fieldAccessMap.put('othercity', fldaccess);
+                        fieldAccessMap.put('otherstate', fldaccess);
+                        fieldAccessMap.put('otherpostalcode', fldaccess);
+                        fieldAccessMap.put('othercountry', fldaccess);
+                    }
+             }
+
     }
     
     public String getParentObjectField(String fld){

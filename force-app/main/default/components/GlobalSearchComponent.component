@@ -29,16 +29,16 @@
                                         document.getElementById('{!$Component.recVariable}').value = recordId;
                                         return;
                                     }
-                                    // var txt;
-                                    // var r = confirm("Are you Sure!");
-                                    // if (r == true) {
-                                    //     document.getElementById('{!$Component.objVariable}').value = obj;
-                                    //     document.getElementById('{!$Component.recVariable}').value = recordId;
+                                    var txt;
+                                    var r = confirm("Are you Sure!");
+                                    if (r == true) {
+                                        document.getElementById('{!$Component.objVariable}').value = obj;
+                                        document.getElementById('{!$Component.recVariable}').value = recordId;
                                         
-                                    //     return ;
-                                    // } else {
-                                    //     document.getElementById('{!$Component.confirmVariable}').value = false;
-                                    // }
+                                        return ;
+                                    } else {
+                                        document.getElementById('{!$Component.confirmVariable}').value = false;
+                                    }
                                 }
                                 </script>
                         </apex:column>
@@ -82,7 +82,7 @@
             <c:PaginationComponent typeOfQuery="SOSL" recordquery="{!query}" fieldList="{!fieldList}" objectName="{!objName}" QLimit="2000" 
                                    profile="{!profileName}"/>
         </apex:outputpanel>
-        <apex:outputPanel rendered="{!customUser['isCreate__c']}" id="createrecordid">
+        <apex:outputPanel rendered="{!customUser['isCreate__c']}">
             <c:CreateRecordComponent objectName="{!dummyObjName}"  recordId="{!delRecordId}" />
         </apex:outputPanel>
     </apex:outputPanel>

@@ -35,6 +35,7 @@ public class DetailPageComponentController {
         try {
             initSectionFields(getRecordTypeIdFromRecordId(recId));
             String query = 'SELECT ' + String.join(selectedFieldLst, ', ') + ' FROM ' + objName + ' WHERE id =  \'' + recId + '\'';
+            System.debug(query);
             List<sobject> sobjList = Database.query(query);
             record = sobjList[0];
             dummyRecord = record.clone();
@@ -80,12 +81,12 @@ public class DetailPageComponentController {
 
     public void initSectionFields(Id recTypeId){
         id userId = Apexpages.currentPage().getParameters().get('Userid');
-        Site_User__c siteUser = [SELECT profile__c FROM Site_User__c WHERE Id = :userId LIMIT 1];
+        Site_User__c siteUser = [SELECT Profile_Name__r.Name FROM Site_User__c WHERE Id = :userId LIMIT 1];
         try{
             selectedFieldLst = new List<String>();
             
-            //layoutSections = LayoutDescriberHelper.describeSectionWithFields(recTypeId, objName, siteUser.profile__C);
-            layoutSections = getSectionsAndField(siteUser.profile__C);
+            //layoutSections = LayoutDescriberHelper.describeSectionWithFields(recTypeId, objName, siteUser.Profile_Name__r.Name);
+            layoutSections = getSectionsAndField(siteUser.Profile_Name__r.Name);
             for (LayoutDescriberHelper.LayoutSection ldh : layoutSections) {
                 ldh.layoutFields = getFilteredFieldsAndInitRecordWrapper(ldh.layoutFields);
             }

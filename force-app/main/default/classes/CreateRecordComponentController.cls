@@ -15,6 +15,7 @@ public class CreateRecordComponentController {
     public List<RTInfo> recTypeInfoLst {get;set;}
     public Boolean isNoRecordType {get;set;}
     public Boolean isrecordType {get; set;}
+    Map<String, Schema.SObjectType> initSchemaMap = Schema.getGlobalDescribe();
     
     public List < LayoutDescriberHelper.LayoutSection > layoutSections {
         get;
@@ -46,7 +47,7 @@ public class CreateRecordComponentController {
         isrecordType = true;
         recordIdList = new List<String>();
         Id uId = Apexpages.currentPage().getParameters().get('UserId');
-        user= database.query('SELECT id, first_Name__C, last_Name__c, name, Profile__C, Email__C FROM Site_User__c Where id = :uId limit 1'); 
+        user= database.query('SELECT id, first_Name__C, last_Name__c, name, Profile_Name__r.Name, Email__C FROM Site_User__c Where id = :uId limit 1'); 
         if (recId != 'NA' && recId != null) {
             // Edit mode
             try{
@@ -76,7 +77,6 @@ public class CreateRecordComponentController {
                 return (Id)Database.query(query)[0].get('RecordTypeId');
             }
         }else{
-            //List<Schema.RecordTypeInfo> rtiLst = Schema.getGlobalDescribe().get(selectedobj).getDescribe().getRecordTypeInfos();
             List<Record_Type__C> rtiLst = getRecordTypeIDFromDatabase();
             if (rtiLst.size() == 1) {
                 return rtiLst[0].id;
@@ -91,7 +91,7 @@ public class CreateRecordComponentController {
     public list<Record_Type__C> getRecordTypeIDFromDatabase(){
         List<Record_Type__C> RecTypeLst = new List<Record_Type__C>();
         try {
-            List<Record_type__C> rtTypeLst = [SELECT RecordTypeId__C, Name, isPermitted__c FROM Record_Type__c WHERE Object__r.developer_Name__C = :selectedobj AND profile__r.Name = :user.Profile__c];
+            List<Record_type__C> rtTypeLst = [SELECT RecordTypeId__C, Name, isPermitted__c FROM Record_Type__c WHERE Object__r.developer_Name__C = :selectedobj AND profile__r.Name = :user.Profile_Name__r.Name];
            
             for (Record_Type__C rt  : rtTypeLst) {
                 if(rt.isPermitted__C == true){
@@ -136,12 +136,12 @@ public class CreateRecordComponentController {
     }
     
     public void initRecTypeInfoLst(){
-        //List<Schema.RecordTypeInfo> rtiLst = Schema.getGlobalDescribe().get(selectedobj).getDescribe().getRecordTypeInfos();
+
         recTypeInfoLst = new List<RTInfo>();
         selectedRecordTypeId = null;
         try {
 
-            List<Record_type__C> rtTypeLst = [SELECT RecordTypeId__C, Name, isPermitted__c FROM Record_Type__c WHERE Object__r.developer_Name__C = :selectedobj AND profile__r.Name = :user.Profile__c];
+            List<Record_type__C> rtTypeLst = [SELECT RecordTypeId__C, Name, isPermitted__c FROM Record_Type__c WHERE Object__r.developer_Name__C = :selectedobj AND profile__r.Name = :user.Profile_Name__r.Name];
            
             for (Record_Type__C rt  : rtTypeLst) {
                  if(rt.Name == 'Master' && rtTypeLst.size() == 1){
@@ -165,7 +165,6 @@ public class CreateRecordComponentController {
                     }
             }
         } catch (Exception e) {
-            System.debug(e.getMessage() + '  ' + e.getLineNumber());
             needJavaScript.put('Success', new NotificationMessage(false, 'NA', 'NA'));
             needJavaScript.put('Failure', new NotificationMessage(true, 'ERROR', e.getMessage()));
         }
@@ -236,7 +235,7 @@ public class CreateRecordComponentController {
     @testVisible Id getProfileId(){
         try {
             String sUserid = ApexPages.currentPage().getParameters().get('UserId');
-            String profileName = [SELECT profile__c FROM Site_User__c WHERE Id = :sUserid][0].Profile__c;
+            String profileName = [SELECT Profile_Name__r.Name FROM Site_User__c WHERE Id = :sUserid][0].Profile_Name__r.Name;
             return [SELECT Id FROM Profile WHERE Name = :profileName][0].Id;
         } catch (Exception e) {
             return '';
@@ -250,15 +249,15 @@ public class CreateRecordComponentController {
     }
     
     public Pagereference showAppropriatePageLayout(){
-        isrecordType = false;
+        
         if(selectedRecordTypeId == null){
-            // Notification Plugin Use
             needJavaScript.put('Success', new NotificationMessage(false, 'NA', 'NA'));
-            needJavaScript.put('Failure', new NotificationMessage(true, 'ERROR', 'Record Type could not be fetched'));
+            needJavaScript.put('Failure', new NotificationMessage(true, 'ERROR', 'Please Select Record Type'));
+            return null;
         }else{
             Id uId = Apexpages.currentPage().getParameters().get('UserId');
             try{
-                user= database.query('SELECT id, first_Name__C, last_Name__c, name, Profile__C, Email__C FROM Site_User__c Where id = :uId limit 1');            
+                user= database.query('SELECT id, first_Name__C, last_Name__c, name, Profile_Name__r.Name, Email__C FROM Site_User__c Where id = :uId limit 1');            
             }catch(Exception e){
                 System.debug('Exception in class: ' + String.valueOf(this).split(':')[0] + ' === Message: ' + e.getMessage() + ' === At Line: ' + e.getLineNumber());
                 user = new Site_User__c();
@@ -287,7 +286,7 @@ public class CreateRecordComponentController {
                 layoutSections.add(lsection);
             }*/
            layoutSections = getLayoutSectionsFromDatabase(selectedRecordTypeId);
-            //layoutSections = LayoutDescriberHelper.describeSectionWithFields(selectedRecordTypeId, selectedobj, user.Profile__c);
+            //layoutSections = LayoutDescriberHelper.describeSectionWithFields(selectedRecordTypeId, selectedobj, user.Profile_Name__r.Name);
 
 
 
@@ -304,9 +303,9 @@ public class CreateRecordComponentController {
          List<LayoutDescriberHelper.LayoutSection> layoutSections1 = new List<LayoutDescriberHelper.LayoutSection>();
         
         try {
-            Record_type__C rtType = [SELECT RecordTypeId__C, Name, isPermitted__c FROM Record_Type__c WHERE RecordTypeId__C = :recTypeId AND (Object__r.developer_Name__C = :selectedobj AND profile__r.Name = :user.Profile__c)LIMIT 1];
+            Record_type__C rtType = [SELECT RecordTypeId__C, Name, isPermitted__c FROM Record_Type__c WHERE RecordTypeId__C = :recTypeId AND (Object__r.developer_Name__C = :selectedobj AND profile__r.Name = :user.Profile_Name__r.Name) LIMIT 1];
             if(rtType != null && rtType.isPermitted__C == true){
-                PageLayout__C pgLayout = [SELECT Name FROM PageLayout__C WHERE (Object__r.developer_Name__C = :selectedobj AND Profile__r.Name = : user.Profile__c) AND Record_Type__r.Name = :rtType.Name LIMIT 1];
+                PageLayout__C pgLayout = [SELECT Name FROM PageLayout__C WHERE (Object__r.developer_Name__C = :selectedobj AND Profile__r.Name = : user.Profile_Name__r.Name) AND Record_Type__r.Name = :rtType.Name LIMIT 1];
                 String pgName = pgLayout.Name;
                 List<Section__c> secLst = [SELECT Name, column__C, Fields_developer_Name__c FROM Section__c WHERE PageLayout__r.Name = :pgName AND ObjectName__C = : selectedobj];
                 for (Section__C sc : secLst) {
@@ -314,13 +313,22 @@ public class CreateRecordComponentController {
                     LayoutDescriberHelper.LayoutSection lay  = new LayoutDescriberHelper.LayoutSection();
                     lay.name = sc.Name;
                     lay.columns = (Integer)sc.column__C;
-                    for(String s : sc.Fields_Developer_Name__c.split('; ')){
- 
-                        LayoutDescriberHelper.LayoutField fl = new LayoutDescriberHelper.LayoutField();
-                        fl.ApiName = s;
-                        lFld.add(fl);
+                    CheckPermission cPermission= getAccessbility();
+                    if(cPermission != null){
+                        for (String permittedFld: cPermission.accessibility1.fieldAccessibility.keyset()) {
+
+                            for(String s : sc.Fields_Developer_Name__c.split('; ')){
+                                LayoutDescriberHelper.LayoutField fl = new LayoutDescriberHelper.LayoutField();
+                                fl.ApiName = s.toLowerCase();
+                                if (permittedFld.toLowerCase() == s.toLowerCase()) {
+                                    lFld.add(fl);
+                                }
+                            }
+                        }
+                        lay.accessibilityInstance = cPermission.accessibility1;
                     }
                     lay.layoutFields = lFld;
+                    //lay.accessibilityInstance = getAccessbility();
                     layoutSections1.add(lay);
                     
 
@@ -336,6 +344,30 @@ public class CreateRecordComponentController {
            
         }
         return layoutSections1;
+    }
+
+    public CheckPermission getAccessbility(){
+            CheckPermission access;
+        try {
+              Attachment at ;
+           try {
+             at = [select name, body from attachment WHERE Name = : user.Profile_Name__r.Name + selectedobj LIMIT 1];
+           } catch (Exception e) {
+               Apexpages.addMessage(new Apexpages.message(Apexpages.Severity.ERROR, 'Profile Permission is not available. Please contact your Administrator'));
+               return access;
+           }
+            String str = at.Body.toString();
+            access=  (CheckPermission)JSON.deserialize(str, CheckPermission.class);
+            if(access.accessibility1== null && access.accessibility2 == null){
+                Apexpages.addMessage(new Apexpages.message(Apexpages.Severity.INFO, 'Profile Permission data is fetching. Please wait....'));
+                return access;
+            }else {
+                return access;
+            }
+        } catch (Exception e) {
+            Apexpages.addMessage(new Apexpages.message(Apexpages.Severity.ERROR, e.getMessage() + ' Line Number== >> ' + e.getLineNumber()));
+            return access;
+        }
     }
     public void sendEmailMsg(String msg){
         
@@ -367,7 +399,7 @@ public class CreateRecordComponentController {
                 recWrap.record = Database.query(query);
             }catch(Exception e){
                 System.debug('Exception in class: ' + String.valueOf(this).split(':')[0] + ' === Message: ' + e.getMessage() + ' === At Line: ' + e.getLineNumber());
-                recWrap.record = Schema.getGlobalDescribe().get(selectedobj).newSObject();
+                recWrap.record = initSchemaMap.get(selectedobj).newSObject();
             }
             tempRecord = recWrap.record.clone();
             for(String fld: recWrap.dateFields.keySet()){
@@ -381,8 +413,8 @@ public class CreateRecordComponentController {
             System.debug('Exception in class: ' + String.valueOf(this).split(':')[0] + ' === Message: ' + e.getMessage() + ' === At Line: ' + e.getLineNumber());
             needJavaScript.put('Success', new NotificationMessage(false, 'NA', 'NA'));
             needJavaScript.put('Failure', new NotificationMessage(true, 'ERROR', e.getMessage()));
-            recWrap.record = Schema.getGlobalDescribe().get(selectedObj).newSObject();
-            recWrap.dummyrecord = Schema.getGlobalDescribe().get(selectedObj).newSObject();
+            recWrap.record = initSchemaMap.get(selectedObj).newSObject();
+            recWrap.dummyrecord = initSchemaMap.get(selectedObj).newSObject();
             recId = 'NA';
         }        
     }
@@ -450,7 +482,7 @@ public class CreateRecordComponentController {
         userInfo__C customUser;
         Id uId = Apexpages.currentPage().getParameters().get('UserId');
         try{
-            user= database.query('SELECT id, first_Name__C, last_Name__c, name, Profile__C, Email__C FROM Site_User__c Where id = :uId limit 1');
+            user= database.query('SELECT id, first_Name__C, last_Name__c, name, Profile_Name__r.Name, Email__C FROM Site_User__c Where id = :uId limit 1');
             customUser= UserInfo__c.getInstance(user.Email__C);            
         }catch(Exception e){
             System.debug('Exception in class: ' + String.valueOf(this).split(':')[0] + ' === Message: ' + e.getMessage() + ' === At Line: ' + e.getLineNumber());
@@ -688,8 +720,7 @@ public class CreateRecordComponentController {
     }
 public String getReferenceFieldApiName(String parentObjName, String childobjName){
         String fldApiName = '';
-        map<string, schema.SObjectType> mp = schema.getGlobalDescribe();
-        schema.DescribeSObjectResult sdescribe = mp.get(parentObjName.toLowerCase()).getDescribe();
+        schema.DescribeSObjectResult sdescribe = initSchemaMap.get(parentObjName.toLowerCase()).getDescribe();
         List<Schema.ChildRelationship> childdesc = sdescribe.getChildRelationships();
         for(Schema.ChildRelationship reference : childdesc) {
             if(reference.getChildSobject().getDescribe().getName() == childobjName)
@@ -794,8 +825,7 @@ public String getReferenceFieldApiName(String parentObjName, String childobjName
         }
         
         public List<String> getNameUniqueField(String objType){
-            Map<String, Schema.SObjectType> schemaMap = Schema.getGlobalDescribe();
-            Schema.SObjectType leadSchema = schemaMap.get(objType);
+            Schema.SObjectType leadSchema = Schema.getGlobalDescribe().get(objType);
             List<String> strResult = new List<String>();
             Schema.DescribeSObjectResult ObjResult =  LeadSchema.getDescribe();
             Map<String, Schema.SObjectField> mapFields = ObjResult.Fields.getMap();
@@ -830,14 +860,14 @@ public String getReferenceFieldApiName(String parentObjName, String childobjName
         
         userInfo__C customUser;
         Site_User__c user;
-        id uId = apexpages.currentPage().getParameters().get('userId');
+        id uId = apexpages.currentPage().getParameters().get('UserId');
         try{
-            user= database.query('SELECT id, first_Name__C, last_Name__c, name, Profile__C FROM Site_User__c Where id = :uId limit 1');
-            customUser = UserInfo__c.getInstance(user.Name);
+            user= database.query('SELECT id, first_Name__C, last_Name__c, name, Profile_Name__r.Name, Email__C FROM Site_User__c Where id = :uId limit 1');
+            customUser = UserInfo__c.getInstance(user.Email__C);
             customUser.isCreate__c= false;
             update customUser;
-            recWrap.dummyrecord = Schema.getGlobalDescribe().get(selectedObj).newSObject();
-            recWrap.record = Schema.getGlobalDescribe().get(selectedObj).newSObject();
+            recWrap.dummyrecord = initSchemaMap.get(selectedObj).newSObject();
+            recWrap.record = initSchemaMap.get(selectedObj).newSObject();
         }catch(Exception e){
             user = new Site_User__c();
             customUser =new UserInfo__C();
@@ -870,7 +900,7 @@ public String getReferenceFieldApiName(String parentObjName, String childobjName
                 histryobj.put(getReferenceFieldApiName(), recId);
                 Map<String ,object> fldMap = sobj.getPopulatedFieldsAsMap();
                 for(String fld : fldMap.keySet()){
-                   Map<String, Schema.SObjectField> fieldMap =  Schema.getGlobalDescribe().get(selectedobj.toLowerCase()).getDescribe().fields.getMap();
+                   Map<String, Schema.SObjectField> fieldMap =  initSchemaMap.get(selectedobj.toLowerCase()).getDescribe().fields.getMap();
                     if(fieldMap.get(fld).getDescribe().isUpdateable()){
                         if(tempRecord.get(fld)!=null && sobj.get(fld) !=null){
                             if(!tempRecord.get(fld).equals(sobj.get(fld))){
@@ -932,8 +962,7 @@ public String getReferenceFieldApiName(String parentObjName, String childobjName
     
     public String getReferenceFieldApiName(){
         String fldApiName = '';
-        map<string, schema.SObjectType> mp = schema.getGlobalDescribe();
-        schema.DescribeSObjectResult sdescribe = mp.get(selectedobj.toLowerCase()).getDescribe();
+        schema.DescribeSObjectResult sdescribe = initSchemaMap.get(selectedobj.toLowerCase()).getDescribe();
         List<Schema.ChildRelationship> childdesc = sdescribe.getChildRelationships();
         for(Schema.ChildRelationship reference : childdesc) {
             if(reference.getChildSobject().getDescribe().getName().toLowerCase() == 'sitehistory__c')
@@ -980,7 +1009,7 @@ public String getReferenceFieldApiName(String parentObjName, String childobjName
             for (LayoutDescriberHelper.LayoutSection ldh : layoutSections) {
                 ldh.layoutFields = getFilteredFieldsAndInitRecordWrapper(ldh.layoutFields, dMap, dtMap, refMap, rValueMap, lvalueMap);
             }
-            sobject sobj = Schema.getGlobalDescribe().get(selectedObj).newSObject();
+            sobject sobj = initSchemaMap.get(selectedObj).newSObject();
             initparentField();
             if(customUser.isRelated__C){
                 try{
@@ -1001,7 +1030,7 @@ public String getReferenceFieldApiName(String parentObjName, String childobjName
         
         Id uId = Apexpages.currentPage().getParameters().get('UserId');
         try{
-            user= database.query('SELECT id, first_Name__C, last_Name__c, name, Profile__C, Email__C FROM Site_User__c Where id = :uId limit 1');
+            user= database.query('SELECT id, first_Name__C, last_Name__c, name, Profile_Name__r.Name, Email__C FROM Site_User__c Where id = :uId limit 1');
             
             customUser= UserInfo__c.getInstance(user.Email__C);
             
@@ -1015,8 +1044,7 @@ public String getReferenceFieldApiName(String parentObjName, String childobjName
     
     public String getReferenceFieldonchildObj(String parentObjName,  String childobjName ){
         String fldApiName = '';
-        map<string, schema.SObjectType> mp = schema.getGlobalDescribe();
-        schema.DescribeSObjectResult sdescribe = mp.get(parentObjName.toLowerCase()).getDescribe();
+        schema.DescribeSObjectResult sdescribe = initSchemaMap.get(parentObjName.toLowerCase()).getDescribe();
         List<Schema.ChildRelationship> childdesc = sdescribe.getChildRelationships();
         for(Schema.ChildRelationship reference : childdesc) {
             if(reference.getChildSobject().getDescribe().getName() == childobjName)
@@ -1030,7 +1058,7 @@ public String getReferenceFieldApiName(String parentObjName, String childobjName
         List<LayoutDescriberHelper.LayoutField> Lflds = new List<LayoutDescriberHelper.LayoutField>();
         Map<String, Schema.SObjectField> fldMap;
         try{
-            fldMap= Schema.getGlobalDescribe().get(selectedObj.toLowerCase()).getDescribe().fields.getMap();
+            fldMap= initSchemaMap.get(selectedObj.toLowerCase()).getDescribe().fields.getMap();
             Integer fldcount = 0;
             for(LayoutDescriberHelper.LayoutField Lfld: fldLst){
                 String fld = Lfld.ApiName;
@@ -1063,31 +1091,11 @@ public String getReferenceFieldApiName(String parentObjName, String childobjName
             return Lflds;
         }
     }
-   
-    public List<String> getFieldsFromFieldSet(String fldSetName){
-        List<String> fls = new List<String>();
-        List<Schema.FieldSetMember> fieldSetMemberList =  readFieldSet(fldSetName, selectedobj);
-        for(Schema.FieldSetMember fieldSetMemberObj : fieldSetMemberList)
-        {
-            fls.add(fieldSetMemberObj.getFieldPath());
-        }
-        return fls;
-    }
-    
-    public static List<Schema.FieldSetMember> readFieldSet(String fieldSetName, String ObjectName)
-    {
-        Map<String, Schema.SObjectType> GlobalDescribeMap = Schema.getGlobalDescribe(); 
-        Schema.SObjectType SObjectTypeObj = GlobalDescribeMap.get(ObjectName);
-        Schema.DescribeSObjectResult DescribeSObjectResultObj = SObjectTypeObj.getDescribe();
-        
-        Schema.FieldSet fieldSetObj = DescribeSObjectResultObj.FieldSets.getMap().get(fieldSetName);
-        return fieldSetObj.getFields(); 
-    }  
+
 
 public Static List<Selectoption> getMultiselectValue(string objName, String fld){
         list<selectoption> AvailableValues = new List<Selectoption>();
-        Map<String, Schema.SObjectType> sp = Schema.getGlobalDescribe();
-        Schema.DescribeSObjectResult  objSchema  = sp.get(objName).getDescribe();
+        Schema.DescribeSObjectResult  objSchema  = Schema.getGlobalDescribe().get(objName).getDescribe();
         Map<String, Schema.SObjectField> fieldMap = objSchema.fields.getmap();
         List<Schema.Picklistentry> fldLst =fieldmap.get(fld).getDescribe().getpicklistValues();
         List<String> pickList = new List<String>();

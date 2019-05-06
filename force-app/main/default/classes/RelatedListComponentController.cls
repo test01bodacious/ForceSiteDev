@@ -136,9 +136,16 @@ public class RelatedListComponentController {
         Map<String, String> relObjMap = new Map<String, String>();
 
         try {
+             CheckPermission cPermission= getAccessbility();
             List<RelatedList__C> relatedObjLst = [SELECT Name, developer_Name__C, fields_developer_name__C FROM RelatedList__C WHERE object__r.developer_Name__C = :objName];
             for (Relatedlist__c rl : relatedObjLst) {
-                relObjMap.put(rl.Name, rl.developer_Name__c);
+                 if (cPermission.accessibility1.objectAccessibility.containsKey(rl.developer_Name__c.toLowerCase())) {
+
+                     if(cPermission.accessibility1.objectAccessibility.get(rl.developer_Name__c.toLowerCase()) != null && cPermission.accessibility1.objectAccessibility.get(rl.developer_Name__c.toLowerCase()).hasReadAccess){
+                        relObjMap.put(rl.Name, rl.developer_Name__c);
+                    }
+                }
+               
             }
         } catch (Exception e) {
             Apexpages.addMessage(new Apexpages.message(Apexpages.Severity.ERROR, e.getMessage()));
@@ -159,6 +166,32 @@ public class RelatedListComponentController {
         return relObjMap;
     }
     
+
+     public CheckPermission getAccessbility(){
+        CheckPermission access;
+        try {
+            Attachment at ;
+            try {
+                at = [select name, body from attachment WHERE Name = : profileName + 'Account' LIMIT 1];
+            } catch (Exception e) {
+                System.debug(e.getMessage() + e.getLineNumber());
+                Apexpages.addMessage(new Apexpages.message(Apexpages.Severity.ERROR, 'Profile Permission is not available. Please contact your Administrator'));
+                return access;
+            }
+            String str = at.Body.toString();
+            access=  (CheckPermission)JSON.deserialize(str, CheckPermission.class);
+            if(access.accessibility1== null && access.accessibility2 == null){
+                Apexpages.addMessage(new Apexpages.message(Apexpages.Severity.INFO, 'Profile Permission data is fetching. Please wait....'));
+                return access;
+            }else {
+                return access;
+            }
+        } catch (Exception e) {
+            System.debug(e.getMessage() + e.getLineNumber());
+            Apexpages.addMessage(new Apexpages.message(Apexpages.Severity.ERROR, e.getMessage() + ' Line Number== >> ' + e.getLineNumber()));
+            return access;
+        }
+    }
     public String getRelatedQuery(String relObj, List<String> relfieldLst){
         
         String query = '';
@@ -180,6 +213,7 @@ public class RelatedListComponentController {
             if(ob.toLowerCase() == reference.getChildSObject().getDescribe().getName().tolowerCase())
                 fld= reference.getfield().getdescribe().getName();
         }
+        
         return fld;
         
     }
@@ -188,17 +222,18 @@ public class RelatedListComponentController {
         List<String> fldLst = new List<String>();
          //fldLst.addAll(getDefaultFields(obj));
         queryType = Apexpages.currentPage().getparameters().get('queryType');
-                RelatedList__C objName ;
+                RelatedList__C relatedObject ;
                 try {
                     if (queryType == 'SOQL') {
-                    objName = [SELECT fields_Developer_Name__C FROM RelatedList__C WHERE developer_Name__c = :obj AND Object__r.Developer_Name__C = :objName LIMIT 1];
-                    if (objName != null && objName.fields_developer_name__c != null) {
-                        fldLst = objName.fields_Developer_Name__C.toLowerCase().split('; ');
+                    relatedObject = [SELECT fields_Developer_Name__C FROM RelatedList__C WHERE developer_Name__c = :obj AND Object__r.Developer_Name__C = :objName LIMIT 1];
+                    if (relatedObject != null && relatedObject.fields_developer_name__c != null) {
+                        fldLst = relatedObject.fields_Developer_Name__C.toLowerCase().split('; ');
                     }
                 }
                 } catch (Exception e) {
                     System.debug(e.getMessage());
-                    Apexpages.addMessage(new Apexpages.message(Apexpages.Severity.ERROR, 'You lack some data from related list object. Please contact your administrator'));
+
+                    Apexpages.addMessage(new Apexpages.message(Apexpages.Severity.ERROR, 'You lack some data from related list object. Please contact your administrator' + e.getMessage() + e.getLineNumber()));
                 }
         return fldLst;
     }

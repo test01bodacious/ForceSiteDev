@@ -16,6 +16,11 @@
     </apex:outputPanel>
     
     <apex:outputPanel layout="block" id="createnewpanel" style="text-align:center;" >
+            <apex:actionStatus id="Lightning_Spinner">
+                    <apex:facet name="start">
+                        <c:LightningSpinner />
+                    </apex:facet>
+                </apex:actionStatus>
         <br/><br/>
         <apex:commandButton value="Create New"  action="{!CreateNew}" status="Lightning_Spinner" reRender="createnewpanel" style="color:black;width:120px;margin:5px; background:#fafaf9; text-decoration:none;"
                             styleClass="commoncss"/>
@@ -71,6 +76,7 @@
                             </apex:outputPanel>
                         </apex:facet>  
                         <apex:inputCheckbox value="{!rec.isSelected}" id="checkBox" onclick="countCheck(this, 'checkAllBox', 'checkBox')"/>
+                    
                     </apex:column>
                     <apex:column width="2%" headerValue="Details" > 
                         <apex:commandButton value="Open" image="{!$Resource.OpenRecord}" onclick="setVariable('{!rec.Record['id']}');"
@@ -107,7 +113,9 @@
                                 </apex:outputPanel>
                             </apex:facet>
                             <apex:outputfield value="{!rec.dummyRecord[fld.fieldNameWithoutNamespace]}" id="inputData" rendered="{!accessibility1.fieldAccessibility[fld.fieldNameWithoutNamespace].hasEditAccess}" />
-                            <apex:outputtext value="{!rec.dummyRecord[fld.fieldNameWithoutNamespace]}" id="inputData1" rendered="{!!accessibility1.fieldAccessibility[fld.fieldNameWithoutNamespace].hasEditAccess}" />
+                            <apex:outputtext value="{!rec.dummyRecord[fld.fieldNameWithoutNamespace]}" id="inputData1" rendered="{!AND(!accessibility1.fieldAccessibility[fld.fieldNameWithoutNamespace].hasEditAccess, !($ObjectType[objName].Fields[fld.fieldNameWithoutNamespace].Type = 'boolean'))}" />
+                            <apex:inputCheckbox value="{!rec.dummyRecord[fld.fieldNameWithoutNamespace]}" rendered="{!AND(!accessibility1.fieldAccessibility[fld.fieldNameWithoutNamespace].hasEditAccess, $ObjectType[objName].Fields[fld.fieldNameWithoutNamespace].Type = 'boolean')}" 
+                                                disabled="true" />
                         </apex:column>
                     </apex:repeat>
                     <apex:column width="10%" rendered="{!OR(objName = 'task__c', objName = 'event__c')}" >
@@ -245,18 +253,21 @@
         </script>
         <apex:outputpanel >
             <center>
-                <apex:commandButton value="Create Task" action="{!createtask}" 
-                                    styleClass="commoncss btn" rendered="{!!IF($CurrentPage.Parameters.recid !=null, true, IF(objName = 'task__c', true, false))}" reRender="RecordList" status="Lightning_Spinner" onclick="getPermissionForEvent()">
+                <apex:variable var="list" value="{!''}{!objkey}" />
+                <apex:commandButton value="Create Task" action="{!createtask}"  
+                                    styleClass="commoncss btn" rendered="{!IF(CONTAINS(list, 'task__c'), IF(accessibility1.objectAccessibility['task__c'].hasCreateAccess, IF(objName = 'task__c', false, true), false) , false)}" 
+                                    reRender="RecordList" status="Lightning_Spinner" onclick="getPermissionForEvent()">
                     <apex:param value="task__c" name="task__c" assignTo="{!taskEventObj}"/>
                 </apex:commandButton>
                 <apex:commandButton value="Create Event" action="{!createtask}" 
-                                    styleClass="commoncss btn" rendered="{!!IF($CurrentPage.Parameters.recid !=null, true, false)}" reRender="RecordList" status="Lightning_Spinner" onclick="getPermissionForEvent()">
+                                    styleClass="commoncss btn" rendered="{!IF(CONTAINS(list, 'event__c'), IF(accessibility1.objectAccessibility['event__c'].hasCreateAccess, true, false) , false)}"
+                                     reRender="RecordList" status="Lightning_Spinner" onclick="getPermissionForEvent()">
                     <apex:param value="event__c" name="event__c" assignTo="{!taskEventObj}"/>
                 </apex:commandButton>
                 <apex:commandButton value="update" action="{!updateRecords}"
-                                    styleClass="commoncss btn" rendered="{!!IF($CurrentPage.Parameters.recid !=null, true, false)}" reRender="RecordList" status="Lightning_Spinner" onclick="getPermissionForEvent()"/>
+                                    styleClass="commoncss btn" reRender="RecordList" status="Lightning_Spinner" onclick="getPermissionForEvent()"/>
                 <apex:commandButton value="Delete" action="{!deleteRecords}" 
-                                    styleClass="commoncss btn" rendered="{!!IF($CurrentPage.Parameters.recid !=null, true, false)}" reRender="RecordList" status="Lightning_Spinner" onclick="getPermissionForEvent()"/>
+                                    styleClass="commoncss btn" reRender="RecordList" status="Lightning_Spinner" onclick="getPermissionForEvent()"/>
             </center>
         </apex:outputpanel>
         <apex:outputPanel layout="block" rendered="{!customUser['isTask__C']}">

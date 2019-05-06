@@ -26,7 +26,7 @@ public  class HeaderPageController_Test {
     }
     @isTest
     public static void HeaderPageController1(){
-        site_User__c site=new Site_User__c(Name='Aniket',Email__c='aniketraj8493@gmail.com',Profile__c='System Administrator');
+        site_User__c site=new Site_User__c(Name='Aniket',Email__c='aniketraj8493@gmail.com',Profile_Name__C='System Administrator');
         insert site;
         Test.startTest();
         PageReference pageRef =  Page.HeaderPage;
@@ -139,7 +139,7 @@ public  class HeaderPageController_Test {
         usr.Email_Id__c='aniketraj8493@gmail.com';
         usr.name='aniketraj8493@gmail.com';
         insert usr;
-        site_User__c site=new Site_User__c(Name='Aniket',Email__c=usr.Email_Id__c,Profile__c='System Administrator');
+        site_User__c site=new Site_User__c(Name='Aniket',Email__c=usr.Email_Id__c,Profile_Name__C='System Administrator');
         insert site;
         Test.startTest();
         LayoutDescriberHelper.getDefaultRecordType(new Account());
@@ -162,7 +162,7 @@ public  class HeaderPageController_Test {
         usr.Email_Id__c='aniketraj8493@gmail.com';
         usr.name='aniketraj8493@gmail.com';
         insert usr;
-        site_User__c site=new Site_User__c(Name='Aniket',Email__c=usr.Email_Id__c,Profile__c='System Administrator');
+        site_User__c site=new Site_User__c(Name='Aniket',Email__c=usr.Email_Id__c,Profile_Name__C='System Administrator');
         insert site;
         Test.startTest();
         LayoutDescriberHelper.getDefaultRecordType(new Account());
@@ -209,7 +209,7 @@ public  class HeaderPageController_Test {
         Site_User__c site=new Site_User__c();
         site.Name='Aniket';
         site.Email__c=usr.Email_Id__c;
-        site.Profile__c='System Administrator';
+        site.Profile_Name__C='System Administrator';
         insert site;
         Test.startTest();
         PageReference pageRef =  Page.HeaderPage;
@@ -238,7 +238,7 @@ public  class HeaderPageController_Test {
          Site_User__c site=new Site_User__c();
         site.Name='Aniket';
         site.Email__c='aniketsingh@gmail.com';
-        site.Profile__c='System Administrator';
+        site.Profile_Name__C='System Administrator';
         insert site;
         Test.startTest();
         PageReference pageRef =  Page.HeaderPage;
@@ -257,7 +257,7 @@ public  class HeaderPageController_Test {
          Site_User__c site=new Site_User__c();
         site.Name='Aniket';
         site.Email__c='aniketsingh@gmail.com';
-        site.Profile__c='System Administrator';
+        site.Profile_Name__C='System Administrator';
         insert site;
         Test.startTest();
          PageReference pageRef =  Page.HeaderPage;

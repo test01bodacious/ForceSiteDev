@@ -73,7 +73,7 @@
         animation-name: animatetopreverse;
         animation-duration: 0.4s
         }
-        @media only screen and (max-width: 600px){
+        /* @media only screen and (max-width: 600px){
             .modal-content {
         position: relative;
         background-color: #fefefe;
@@ -102,7 +102,7 @@
         animation-name: animatetopreverse;
         animation-duration: 0.4s
         }
-        }
+        } */
         /* Add Animation */
         @-webkit-keyframes animatetop {
         from {top:-300px; opacity:0} 
@@ -223,7 +223,8 @@
             <div id="modalContent" class="modal-content">
                 <div class="modal-header">
                     <span class="close">&times;</span>
-                    <apex:outputPanel id="Heading">
+                    <apex:outputPanel id="Heading" >
+                            <apex:outputText value="{!JavaScriptFunctionCall}" escape="false"/>
                         <label>{!IF(AND(!isNoRecordType, ISNULL(selectedRecordTypeId), recId = 'NA'),'Select Record Type',IF(recId != 'NA','Update ' + $ObjectType[selectedObj].Label,'Create New ' + $ObjectType[selectedObj].Label))} {!sampleText}</label>
                     </apex:outputPanel>
                 </div>
@@ -236,20 +237,23 @@
                                         <c:LightningSpinner />
                                     </apex:facet>
                                 </apex:actionStatus>
-                                <apex:outputPanel rendered="{!AND(!isNoRecordType, ISNULL(selectedRecordTypeId), recId = 'NA')}">
+                                <apex:outputPanel rendered="{!AND(!isNoRecordType, ISNULL(selectedRecordTypeId), recId = 'NA', isrecordType)}">
+                                    
                                     <apex:selectRadio value="{!selectedRecordTypeId}" layout="pageDirection" style="font-size:18px; border-spacing:15px;">  
-                                        <apex:selectOptions value="{!AvailableRecordTypes}"/>
+                                        <apex:selectOptions value="{!AvailableRecordTypes}" />
                                     </apex:selectRadio>
                                     <br/><br/><br/>
                                     <center>
                                         <apex:commandButton value="Next >" action="{!showAppropriatePageLayout}" reRender="Heading,Modal" 
-                                                            style="width:100px !important;" styleclass="btn btn-default" status="Lightning_Spinner"/>
-                                    </center>             
+                                                            style="width:100px !important;" styleclass="btn btn-default" status="Lightning_Spinner" />
+                                    </center>
+                                          
                                 </apex:outputPanel>
                                 <apex:outputPanel rendered="{!!AND(!isNoRecordType, ISNULL(selectedRecordTypeId), recId = 'NA')}">
                                     <p id="ErrorMsg" style="color:red;"/>
                                     <apex:outputText value="{!JavaScriptFunctionCall}" escape="false"/>
                                     <script>
+                                        
                                     j$ = jQuery.noConflict();  
                                     j$(document).ready(function(){
                                         try{
@@ -284,7 +288,7 @@
                                                      <apex:panelGrid columns="2" width="100%">
                                                     <apex:repeat value="{!layoutSection.layoutFields}" var="fld">
                                                         <apex:outputPanel layout="block" style="width:100%" rendered="{!MOD(fld.fieldCount, 2) != 0}">
-                                                        <apex:outputPanel layout="block" style="padding-left:70px;height:63px;width:568px;">
+                                                        <apex:outputPanel layout="block" style="{!IF(layoutSection.accessibilityInstance.fieldAccessibility[fld.ApiName].hasEditAccess, 'display:block;padding-left:70px;height:63px;width:568px;', 'display:none')}">
                                                             <apex:outputLabel value="{!$ObjectType[selectedObj].Fields[fld.ApiName].Label}" style="font-size:12px;float:left;padding-left:38px;"/>
                                                             <apex:outputLabel value="*" style="font-size:12px;color:red;float:left;" rendered="{!AND(NOT($ObjectType[selectedObj].Fields[fld.ApiName].Type = 'boolean'), !$ObjectType[selectedObj].Fields[fld.ApiName].Nillable)}"/><br/>
                                                             <apex:outputPanel rendered="{!NOT(OR($ObjectType[selectedObj].Fields[fld.ApiName].Type == 'datetime',$ObjectType[selectedObj].Fields[fld.ApiName].Type == 'date', $ObjectType[selectedObj].Fields[fld.ApiName].Type == 'reference', $ObjectType[selectedObj].Fields[fld.ApiName].Type == 'multipicklist'))}">
@@ -439,7 +443,7 @@
                                                     </apex:repeat>
                                                     <apex:repeat value="{!layoutSection.layoutFields}" var="fld">
                                                         <apex:outputPanel layout="block" style="width:100%" rendered="{!MOD(fld.fieldCount, 2) == 0}">
-                                                        <apex:outputPanel layout="block" style="padding-left:70px;height:63px;width:568px;">
+                                                        <apex:outputPanel layout="block" style="{!IF(layoutSection.accessibilityInstance.fieldAccessibility[fld.ApiName].hasEditAccess, 'display:block;padding-left:70px;height:63px;width:568px;', 'display:none')}">
                                                             <apex:outputLabel value="{!$ObjectType[selectedObj].Fields[fld.ApiName].Label}" style="font-size:12px;float:left;padding-left:38px;"/>
                                                             <apex:outputLabel value="*" style="font-size:12px;color:red;float:left;" rendered="{!AND(NOT($ObjectType[selectedObj].Fields[fld.ApiName].Type = 'boolean'), !$ObjectType[selectedObj].Fields[fld.ApiName].Nillable)}"/><br/>
                                                             <apex:outputPanel rendered="{!NOT(OR($ObjectType[selectedObj].Fields[fld.ApiName].Type == 'datetime',$ObjectType[selectedObj].Fields[fld.ApiName].Type == 'date', $ObjectType[selectedObj].Fields[fld.ApiName].Type == 'reference', $ObjectType[selectedObj].Fields[fld.ApiName].Type == 'multipicklist'))}">

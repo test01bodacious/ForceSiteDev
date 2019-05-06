@@ -66,11 +66,12 @@ public class HeaderPageController {
         
         id uId = apexpages.currentPage().getParameters().get('userid');
         try{
-            user= database.query('SELECT id, first_Name__C, last_Name__c, name, Email__C, Profile__C FROM Site_User__c Where id = :uId limit 1'); //isCreate, isTable, isGlobalTable, isTaskEvent, isHome
-            if(user.profile__c != null)
-                profile = user.profile__c;
+            user= database.query('SELECT id, first_Name__C, last_Name__c, name, Email__C, Profile_Name__r.Name FROM Site_User__c Where id = :uId limit 1'); //isCreate, isTable, isGlobalTable, isTaskEvent, isHome
+            if(user.Profile_Name__r.Name != null)
+                profile = user.Profile_Name__r.Name;
             customUser= UserInfo__c.getInstance(user.Email__C);
             customUser.isHome__C= true;
+            customUser.isRelated__C = false;
             isHome= customUser.isHome__C;
         }catch(Exception e){
             user = new Site_User__c();
@@ -105,26 +106,63 @@ public class HeaderPageController {
         List<SObject> objectList ;
         objList = new List<String>();
         moreObjList = new List<String>();
+        CheckPermission cPermission= getAccessbility();
         try{
             objectList = Database.query('SELECT Name, developer_Name__c, fields_Developer_Name__c FROM Object__c WHERE view__c = \'All Records View\' ORDER BY Position__c');
-           if(objectList.size() ==0 || objectList == null){
-               Apexpages.addMessage(new apexpages.message(apexpages.Severity.WARNING, 'Object list is not found from Admin panel. Please contact your Administrator'));
-               return;
-           }
-           integer count = 1;
+            if(objectList.size() ==0 || objectList == null){
+                Apexpages.addMessage(new apexpages.message(apexpages.Severity.WARNING, 'Object list is not found from Admin panel. Please contact your Administrator'));
+                return;
+            }
+            integer count = 1;
             for(Sobject s : objectList){
+                
                 String str = (String)s.get('Developer_Name__c');
-               str=  str.toLowerCase();
-               if(count <= 5)
-                    objList.add(str);
-                else {
-                    moreObjList.add(str);
+                if (cPermission.accessibility1.objectAccessibility.containsKey(str.toLowerCase())) {
+                   
+                    if(cPermission.accessibility1.objectAccessibility.get(str.toLowerCase()) != null && cPermission.accessibility1.objectAccessibility.get(str.toLowerCase()).hasReadAccess){
+                        
+                        if(count <= 5){
+                            str=  str.toLowerCase();
+                            objList.add(str);
+                        }
+                        else {
+                            str=  str.toLowerCase();
+                            moreObjList.add(str);
+                        }
+                    }
+                    
                 }
                 count++;
             }
         }catch(Exception e){
-            System.debug(e.getMessage());
+            System.debug(e.getMessage() + e.getLineNumber());
             Apexpages.addMessage(new ApexPages.message(Apexpages.Severity.ERROR, e.getMessage()));
+        }
+    }
+    
+    public CheckPermission getAccessbility(){
+        CheckPermission access;
+        try {
+            Attachment at ;
+            try {
+                at = [select name, body from attachment WHERE Name = : user.Profile_Name__r.Name + 'Account' LIMIT 1];
+            } catch (Exception e) {
+                System.debug(e.getMessage() + e.getLineNumber());
+                Apexpages.addMessage(new Apexpages.message(Apexpages.Severity.ERROR, 'Profile Permission is not available. Please contact your Administrator'));
+                return access;
+            }
+            String str = at.Body.toString();
+            access=  (CheckPermission)JSON.deserialize(str, CheckPermission.class);
+            if(access.accessibility1== null && access.accessibility2 == null){
+                Apexpages.addMessage(new Apexpages.message(Apexpages.Severity.INFO, 'Profile Permission data is fetching. Please wait....'));
+                return access;
+            }else {
+                return access;
+            }
+        } catch (Exception e) {
+            System.debug(e.getMessage() + e.getLineNumber());
+            Apexpages.addMessage(new Apexpages.message(Apexpages.Severity.ERROR, e.getMessage() + ' Line Number== >> ' + e.getLineNumber()));
+            return access;
         }
     }
     public List<RTInfo> recTypeInfoLst {get;set;}
@@ -158,7 +196,7 @@ public class HeaderPageController {
     public List<LayoutDescriberHelper.LayoutSection> layoutSections ; 
     
     public PageReference create_ViewRecord(){
-
+        
         customUser.isHome__C= false;
         customUser.isCreate__c = false;
         customUser.isGlobalTable__C = false;
@@ -167,7 +205,7 @@ public class HeaderPageController {
         isChatter = false;
         isHome= customUser.isHome__C;
         isGlobalTable=  customUser.isGlobalTable__C;
-
+        
         if(this.Functionality=='CR'){
             
             initRecTypeInfoLst();
@@ -245,8 +283,7 @@ public class HeaderPageController {
     }
     
     public PageReference getSearchResult(){
-        if([SELECT id FROM Object])
-        Pagereference p = Apexpages.currentPage();
+        
         
         customUser.isHome__c = false;
         customUser.isCreate__c = false;
@@ -283,20 +320,20 @@ public class HeaderPageController {
     
     @testVisible List<String> getFieldsFromFieldSet(String objecDeveloperName){
         List<String> sfld = new List<String>();
-         Sobject  objectName = Database.query('SELECT Name, developer_Name__c, fields_Developer_Name__c FROM Object__c WHERE view__c = \'All Records View\' AND  developer_name__c = : objecDeveloperName  LIMIT 1');
-           String fieldStr = (String)objectName.get('fields_Developer_Name__c');
-           fieldStr = fieldStr.toLowerCase();
-           sfld = fieldStr.split('; ');
+        Sobject  objectName = Database.query('SELECT Name, developer_Name__c, fields_Developer_Name__c FROM Object__c WHERE view__c = \'All Records View\' AND  developer_name__c = : objecDeveloperName  LIMIT 1');
+        String fieldStr = (String)objectName.get('fields_Developer_Name__c');
+        fieldStr = fieldStr.toLowerCase();
+        sfld = fieldStr.split('; ');
         // try{
         //     if(Schema.getGlobalDescribe().get(objApiName[index].toLowerCase()).getDescribe().FieldSets.getMap() == null || !Schema.getGlobalDescribe().get(objApiName[index].toLowerCase()).getDescribe().FieldSets.getMap().containsKey(fieldSetName[index].toLowerCase())){
-                
+        
         //         return sfld;
         //     }
         //     for(Schema.FieldSetMember f : Schema.getGlobalDescribe().get(objApiName[index].toLowerCase()).getDescribe().FieldSets.getMap().get(fieldSetName[index].toLowerCase()).getFields())
         //         sfld.add(f.getFieldPath().toLowerCase());
-            
+        
         // }catch(Exception e){
-            
+        
         // }
         return sfld;
     }

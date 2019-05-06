@@ -602,6 +602,7 @@ public void replaceObjectInRelatedList(Map<id, id> idMap){
     }
 
     public void initRecTypeForObjWithoutId(List<String> objLst){
+        // This method insert recordtype which don't have recordType
         Map<String, Schema.SObjectType> mp = Schema.getGlobalDescribe();
         List<Record_Type__C> recTypeLst = new List<Record_Type__C>();
         try {
@@ -621,6 +622,7 @@ public void replaceObjectInRelatedList(Map<id, id> idMap){
                     for(Profile__c pro : [SELECT Id FROM profile__C]){
                         if (!existingRType.contains(recTyp.name + ob.id + pro.id)) {
                             Record_Type__c rtObj = new Record_Type__c();
+                            rtObj.isPermitted__C = true;
                             rtObj.Name = recTyp.Name;
                             rtObj.Profile__c = pro.id;
                             rtObj.Object__c = ob.id;
@@ -658,7 +660,8 @@ public void replaceObjectInRelatedList(Map<id, id> idMap){
                 update ssRecToUpdate;
             }else if(fldUpdateValue == 'relatedlist__c'){
                 List<RelatedList__c> ssRecToUpdate = new List<RelatedList__c>();
-                for (RelatedList__c ss : [SELECT Developer_Name__c, Fields__c, Fields_Developer_Name__c FROM RelatedList__c WHERE Developer_Name__c IN :fldOpts.keySet()]) {
+                for (RelatedList__c ss : [SELECT Developer_Name__c, Fields__c, Fields_Developer_Name__c, object__r.Developer_name__c FROM RelatedList__c WHERE Developer_Name__c IN :fldOpts.keySet()]) {
+                    
                     ss.Fields__c = updatedValue.get(ss.Developer_Name__c).fieldNames;
                     ss.Fields_Developer_Name__c = updatedValue.get(ss.Developer_Name__c).fieldDevNames;
                     ssRecToUpdate.add(ss);
@@ -667,7 +670,6 @@ public void replaceObjectInRelatedList(Map<id, id> idMap){
             }
         } catch (Exception e) {
             error += 'Something went wrong. Could\'nt update Schema Fields. Error: ' + e.getMessage() + '<br/>';
-            //ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Something went wrong. Could\'nt update Schema Fields. Error: ' + e.getMessage()));
         }
         return null;
     }
@@ -696,14 +698,6 @@ public void replaceObjectInRelatedList(Map<id, id> idMap){
         }
     }
 
-    public void initPageLayout(){
-        pageLayoutMap = new Map<String, List<PageLayout__c>>();
-        List<PageLayout__c> pglLst =  [SELECT Name, object__c, Record_Type__c, Profile__C FROM PageLayout__C];
-        for (PageLayout__c pgl : pglLst) {
-
-            
-        }
-    }
     id batchJobId ; 
     public void initProfileBatchApex(List<String> objString){
         if(batchJobId != null){
@@ -725,7 +719,6 @@ public void replaceObjectInRelatedList(Map<id, id> idMap){
 
 
     public void initrelatedList(){
-        System.debug(rltOpts);
        rltOpts = new MAp<String, RelatedObjOption>();
         Map<String, Schema.SObjectType> gd = Schema.getGlobalDescribe(); 
         try {
@@ -870,21 +863,25 @@ public void initrelatedListPbjMap(){
 
     public List<selectoption> getSelectedFieldsForRelatedList(String objName){
         List<SelectOption> selFldOpt = new List<SelectOption>();
-        System.debug(objName);
-        for (RelatedList__c ss : [SELECT Name, Fields__c, Fields_Developer_Name__c FROM RelatedList__c WHERE Developer_Name__c = :objName  LIMIT 1000]) {
+        List<String> eliminateObject = new List<String>();
+        for (RelatedList__c ss : [SELECT Name, Fields__c, Fields_Developer_Name__c, developer_Name__C FROM RelatedList__c WHERE Developer_Name__c = :objName  LIMIT 1000]) {
             if (ss.Fields__c == '' || ss.Fields__c == null || ss.Fields_Developer_Name__c == '' || ss.Fields_Developer_Name__c == null) {
                 return selFldOpt;
             }
-            List<String> fldName =  ss.Fields__c.split('; ');
-            List<String> fldDevName = ss.Fields_Developer_Name__c.split('; ');
-            if(fldName.size() != fldDevName.size()){
-               error += 'Something went wrong! Fields could not be fetched for Object: ' + ss.Name + '<br/>';
-               //ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Something went wrong! Fields could not be fetched for Object: ' + ss.Name));
-               return selFldOpt;
-            }
-            for (Integer i = 0; i < fldName.size(); i++) {
-                SelectOption so = new SelectOption(fldDevName[i], fldName[i]);
-                selFldOpt.add(so);   
+            if(!eliminateObject.contains(ss.developer_Name__C)){
+                eliminateObject.add(ss.developer_Name__C);
+                List<String> fldName =  ss.Fields__c.split('; ');
+                List<String> fldDevName = ss.Fields_Developer_Name__c.split('; ');
+            
+                if(fldName.size() != fldDevName.size()){
+                error += 'Something went wrong! Fields could not be fetched for Object: ' + ss.Name + '<br/>';
+                //ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Something went wrong! Fields could not be fetched for Object: ' + ss.Name));
+                return selFldOpt;
+                }
+                for (Integer i = 0; i < fldName.size(); i++) {
+                    SelectOption so = new SelectOption(fldDevName[i], fldName[i]);
+                    selFldOpt.add(so);   
+                }
             }
         }
         return selFldOpt;

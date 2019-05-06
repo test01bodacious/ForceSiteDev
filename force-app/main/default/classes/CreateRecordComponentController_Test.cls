@@ -83,9 +83,9 @@ public class CreateRecordComponentController_Test {
     }
     @isTest
     public static void getProfileId(){
-        Site_User__c site=new Site_User__c(name='Aniket',profile__c='System Administrator');
+        Site_User__c site=new Site_User__c(name='Aniket',Profile_Name__c='System Administrator');
         insert site;
-        Site_User__c site1=new Site_User__c(name='Aniket',profile__c='custom usr');
+        Site_User__c site1=new Site_User__c(name='Aniket',Profile_Name__c='custom usr');
         insert site1;
         Test.startTest();
         PageReference pageRef = Page.HeaderPage;
@@ -101,7 +101,7 @@ public class CreateRecordComponentController_Test {
     }
     @isTest
     public static void showAppropriatePageLayout(){
-         Site_User__c site=new Site_User__c(name='Aniket',profile__c='System Administrator');
+         Site_User__c site=new Site_User__c(name='Aniket',Profile_Name__c='System Administrator');
          insert site;
          AccountInsert a=new AccountInsert();
          Section__c s=new Section__c();
@@ -123,7 +123,7 @@ public class CreateRecordComponentController_Test {
     }
     //  @isTest
     // public static void showAppropriatePageLayout1(){
-    //     Site_User__c site=new Site_User__c(name='Aniket',profile__c='System Administrator');
+    //     Site_User__c site=new Site_User__c(name='Aniket',Profile_Name__c='System Administrator');
     //     AccountInsert a=new AccountInsert();
     //     CreateRecordComponentController CreateRCcontroller=new CreateRecordComponentController();
     //     CreateRCcontroller.selectedObj='account';

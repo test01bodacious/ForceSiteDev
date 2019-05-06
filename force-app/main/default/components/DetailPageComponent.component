@@ -2,8 +2,9 @@
     <apex:attribute name="objectName" type="String" description="The name of the object" required="true" assignTo="{!objName}"/>
     <apex:attribute name="RecordId" type="String" description="The id of the record whose related records are to be displayed"
                     required="true" assignTo="{!recId}"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
     
-    <apex:outputPanel layout="block" id="DetailComp">
+    <apex:outputPanel layout="block" id="DetailComp" style="height:100%; margin:0%;">
         <script>
         j$ = jQuery.noConflict();  
         j$(document).ready(function(){
@@ -23,7 +24,7 @@
             }
         });
         </script>
-        <div Class="bPageBlock brandSecondaryBrd bDetailBlock">
+        <div style="position:relative; height:100%;">
             <apex:outputpanel id="createRecord"  styleClass="outputpanelclass" layout="block" >
                 <apex:pageMessages id="PgMsg" escape="false"/>
                 <apex:repeat value="{!layoutSections}" var="layoutSection">
@@ -34,18 +35,18 @@
                     </apex:pageBlockSection>
                 </apex:repeat>
             </apex:outputpanel>
-            <c:CreateRecordComponent recordId="{!recId}" objectName="{!objName}" rendered="{!detailMode == 'input'}"/>
+                    <c:CreateRecordComponent recordId="{!recId}" objectName="{!objName}" rendered="{!detailMode == 'input'}"/>
+                <center >
+                    <apex:actionStatus id="LightningSpinner">
+                        <apex:facet name="start">
+                            <c:LightningSpinner />
+                        </apex:facet>
+                    </apex:actionStatus>
+                    <apex:commandButton value="Edit"  styleclass="buttonSave" status="LightningSpinner" reRender="DetailComp">
+                        <apex:param name="inp1" value="input" assignTo="{!detailMode}"/>
+                    </apex:commandButton>&nbsp;&nbsp; 
+                </center>
         </div>
-        <center >
-            <apex:actionStatus id="LightningSpinner">
-                <apex:facet name="start">
-                    <c:LightningSpinner />
-                </apex:facet>
-            </apex:actionStatus>
-            <apex:commandButton value="Edit"  styleclass="buttonSave" status="LightningSpinner" reRender="DetailComp">
-                <apex:param name="inp1" value="input" assignTo="{!detailMode}"/>
-            </apex:commandButton>&nbsp;&nbsp; 
-        </center>
     </apex:outputPanel>
     
     <style type="text/css">
@@ -55,6 +56,9 @@
         width:100px !important;
         height:35px !important;
         font-size:16px !important;
+        bottom: 10px;
+        position: fixed;
+
         }
         .buttonCancel{
         color:white !important;
@@ -74,6 +78,7 @@
                 height:400px !important;
                 overflow:scroll !important;
             }
+            
         
         }
         

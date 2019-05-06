@@ -150,7 +150,7 @@ public class CreateTaskAndEventComponentController {
     @testVisible Id getProfileId(){
         try {
             String sUserid = ApexPages.currentPage().getParameters().get('UserId');
-            String profileName = [SELECT profile__c FROM Site_User__c WHERE Id = :sUserid][0].Profile__c;
+            String profileName = [SELECT Profile_Name__r.Name FROM Site_User__c WHERE Id = :sUserid][0].Profile_Name__r.Name;
             return [SELECT Id FROM Profile WHERE Name = :profileName][0].Id;
         } catch (Exception e) {
             return '';
@@ -244,7 +244,7 @@ public class CreateTaskAndEventComponentController {
         
         id uId = apexpages.currentPage().getParameters().get('userId');
         try{
-            user= database.query('SELECT id, first_Name__C, last_Name__c, name, Profile__C, Email__c FROM Site_User__c Where id = :uId limit 1');
+            user= database.query('SELECT id, first_Name__C, last_Name__c, name, Profile_Name__r.Name, Email__c FROM Site_User__c Where id = :uId limit 1');
             
             customUser= UserInfo__c.getInstance(user.Email__c);
             
@@ -566,7 +566,7 @@ public class CreateTaskAndEventComponentController {
         Site_User__c user;
         id uId = apexpages.currentPage().getParameters().get('userId');
         try{
-            user= database.query('SELECT id, first_Name__C, last_Name__c, name, Profile__C, Email__C FROM Site_User__c Where id = :uId limit 1');
+            user= database.query('SELECT id, first_Name__C, last_Name__c, name, Profile_Name__r.Name, Email__C FROM Site_User__c Where id = :uId limit 1');
             
             customUser= UserInfo__c.getInstance(user.Email__C);
             customUser.isCreate__c= false;

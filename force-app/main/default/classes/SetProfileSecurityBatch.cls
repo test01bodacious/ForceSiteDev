@@ -35,7 +35,6 @@ public class SetProfileSecurityBatch implements Database.Batchable<sObject>{
                     at.Name = (String)pro.get('Name') + ob;
                     at.Body = body;
                     at.ParentId = pro.id;
-
                     if (atNameList.contains(at.Name)) {
                         at.id = atMap.get(at.name).id;
                         toUpdateLst.add(at);

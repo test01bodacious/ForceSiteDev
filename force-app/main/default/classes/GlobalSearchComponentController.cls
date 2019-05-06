@@ -349,7 +349,6 @@ public class GlobalSearchComponentController {
             customuser.isCreate__c = true;
           // layoutSections = LayoutDescriberHelper.describeSectionWithFields(getRecordTypeIdFromRecordId(delRecordId), dummyObjName, user.Profile__c);
             //layoutSections = getLayoutSectionsFromDatabase(getRecordTypeIdFromRecordId(delRecordId), user.Profile__c);
-            System.debug(layoutSections);
            // Cache.Org.put('local.SitePartition.layoutsections' , layoutSections);
             update customUser;
         }catch(Exception e){

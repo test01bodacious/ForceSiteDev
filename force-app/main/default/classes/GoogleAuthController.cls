@@ -298,12 +298,12 @@ public   class GoogleAuthController {
     
     public void initSiteUser(String email){
         
-        Site_User__c myuser = [SELECT Profile__C, name, first_Name__c, last_Name__C, email__C FROM Site_User__c WHERE email__C = :email];
+        Site_User__c myuser = [SELECT Profile_Name__r.Name, name, first_Name__c, last_Name__C, email__C FROM Site_User__c WHERE email__C = :email];
         UserInfo__C u = new UserInfo__c();
         u.Name = email;
         u.email_id__c = email;
         u.isLogged_in__C = true;
-        u.Profile__c =  myUser.profile__c;
+        u.Profile__c =  myUser.Profile_Name__r.Name;
         UserInfo__C ui = UserInfo__c.getInstance(email);
         try{
             

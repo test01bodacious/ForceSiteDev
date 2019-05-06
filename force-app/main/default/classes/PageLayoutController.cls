@@ -1,11 +1,13 @@
-public class PageLayoutController {
+public class PageLayoutController implements Queueable, Database.AllowsCallouts{
     
     List<PageLayout__c> pgLst;
     Map<String, LIST<PageLayout__c>> pgMap;
     public Map<String, ProfRTType> proRtMap {get;set;}
+    public Boolean isPageLayoutInserted {get; set;}
     
     public PageLayoutController(){
         try {
+            isPageLayoutInserted = false;
             pgLst = [SELECT Name, Object__r.Developer_Name__C, Record_Type__r.Name, Profile__r.Name FROM PageLayout__c ORDER BY Object__c];
             pgMap = new Map<String, LIST<PageLayout__c>>();
             List<PageLayout__c> pgl = new List<PageLayout__c>();
@@ -35,11 +37,11 @@ public class PageLayoutController {
             proRtMap.put(objName, prt);
         }
     }
-
+    
     public List<SelectOption> getPageLayoutNamesForObject(String objectName){
-
+        
         return convertListStringTOListSelectoption(getPageLayoutName(objectName));
-       // return new List<SelectOption>{new SelectOption('Master', 'Master'), new SelectOption('Master', 'Master'), new SelectOption('Master', 'Master')};
+        // return new List<SelectOption>{new SelectOption('Master', 'Master'), new SelectOption('Master', 'Master'), new SelectOption('Master', 'Master')};
     }
     
     public List<ProfileWrapper> getprofWrapLst(List<PageLayout__c> plLst, List<String> allRtNames, List<SelectOption> pgNameLst){
@@ -56,7 +58,7 @@ public class PageLayoutController {
         }
         return pwList;
     }
-
+    
     public Map<String, PageLayoutWrapper> getprtLayout(List<PageLayout__c> plLst, String profileName, List<SelectOption> pgNameLst, List<String> allRtNames){
         Map<String, PageLayoutWrapper> prtLayoutMap = new Map<String, PageLayoutWrapper>();
         for (PageLayout__c pl : plLst) {
@@ -102,10 +104,10 @@ public class PageLayoutController {
         }
         return rtTypeWrapLst;
     }
-
+    
     public Pagereference save(){
         List<PageLayout__c> updatePgLst = new List<PageLayout__c>();
-
+        
         try {
             List<String> existinglayout = new  List<String>();
             for (PageLayout__c pg :  [SELECT Profile__r.Name, Name FROM PageLayout__c]) {
@@ -118,7 +120,7 @@ public class PageLayoutController {
                             if(!existinglayout.contains(prw.prtlayout.get(rt.recordTypeName).selectedPlName + prw.profileName)){
                                 prw.prtlayout.get(rt.recordTypeName).sobj.put('Name', prw.prtlayout.get(rt.recordTypeName).selectedPlName);
                                 prw.prtlayout.get(rt.recordTypeName).sobj.put('PagelayoutId__C', getPagelayoutId(prw.prtlayout.get(rt.recordTypeName).selectedPlName));
-                               
+                                
                                 updatePgLst.add((Pagelayout__c)prw.prtlayout.get(rt.recordTypeName).sobj); //.put('name', prw.prtlayout.get(rt.recordTypeName).selectedPlName)
                             }
                         }else {
@@ -136,30 +138,30 @@ public class PageLayoutController {
         }
         return null;
     }
-
-
+    
+    
     public  String accessToken;
-
+    
     public  void orgAuthentication(){
-         GoogleAndConnectedAppCredentials__c credentials = GoogleAndConnectedAppCredentials__c.getInstance('Credential1');
-            String grantType = 'password';
-            String client_Id = credentials.OrgClientId__c;
-            String client_secret = credentials.OrgClientSecret__c;
-            String userName = credentials.OrgUserName__c;
-            String password = credentials.OrgPassword__c;
-            String securityToken = credentials.OrgSecurityToken__c;
-            String instanceUrl = 'https://login.salesforce.com';
-            String endPointUrl = instanceUrl + '/services/oauth2/token?grant_type=' + grantType + '&client_id=' + client_Id + '&client_secret=' + client_secret + '&username=' + userName + '&password=' + password + securityToken;
-            Http h = new Http();
-            HttpRequest req = new HttpRequest();
-            req.setMethod('POST');
-            req.setEndpoint(endPointUrl);
-            HttpResponse res = h.send(req);
-            String body = res.getBody();
-            accessToken = String.valueOf(((Map<String, Object>)JSON.deserializeUntyped(body)).get('access_token'));
-            
+        GoogleAndConnectedAppCredentials__c credentials = GoogleAndConnectedAppCredentials__c.getInstance('Credential1');
+        String grantType = 'password';
+        String client_Id = credentials.OrgClientId__c;
+        String client_secret = credentials.OrgClientSecret__c;
+        String userName = credentials.OrgUserName__c;
+        String password = credentials.OrgPassword__c;
+        String securityToken = credentials.OrgSecurityToken__c;
+        String instanceUrl = 'https://login.salesforce.com';
+        String endPointUrl = instanceUrl + '/services/oauth2/token?grant_type=' + grantType + '&client_id=' + client_Id + '&client_secret=' + client_secret + '&username=' + userName + '&password=' + password + securityToken;
+        Http h = new Http();
+        HttpRequest req = new HttpRequest();
+        req.setMethod('POST');
+        req.setEndpoint(endPointUrl);
+        HttpResponse res = h.send(req);
+        String body = res.getBody();
+        accessToken = String.valueOf(((Map<String, Object>)JSON.deserializeUntyped(body)).get('access_token'));
+        
     }
-
+    
     public  void goToPageLayOutPage(){
         List<PageLayout__c> toInsertPageLayout  =  new List<PageLayout__c>();
         List<String> checkForPageLayout = new List<String>();
@@ -173,11 +175,11 @@ public class PageLayoutController {
             }
             List<Record_Type__c> recTypeLst = [SELECT Object__r.Developer_Name__c, object__c, Profile__c,  Profile__r.Name, Name FROM record_Type__c  ORDER BY Object__r.developer_Name__C];
             for(Record_Type__c rt : recTypeLst){
-               
+                
                 if(rt.isPermitted__c = true){
-                   
+                    
                     if (obj != rt.Object__r.Developer_Name__c) {
-                         rectype =  getPageLayoutName(rt.Object__r.developer_Name__c);
+                        rectype =  getPageLayoutName(rt.Object__r.developer_Name__c);
                     }
                     obj = rt.Object__r.Developer_Name__c;
                     for (String s : rectype) {
@@ -202,29 +204,29 @@ public class PageLayoutController {
             }
             insert toInsertPageLayout;
         } catch (Exception e) {
-             System.debug('Exception in class: ' + String.valueOf(this).split(':')[0] + ' === Message: ' + e.getMessage() + ' === At Line: ' + e.getLineNumber());
+            System.debug('Exception in class: ' + String.valueOf(this).split(':')[0] + ' === Message: ' + e.getMessage() + ' === At Line: ' + e.getLineNumber());
         }
         
     }
     public List<Selectoption> convertListStringTOListSelectoption(List<String> strLst){  //convert list to Map<id, name>
         List<Selectoption> optLst = new List<Selectoption>();
-            for (String s : strLst) {
-                optLst.add(new SelectOption(s,s));
-
-            }
-            return optLst;
+        for (String s : strLst) {
+            optLst.add(new SelectOption(s,s));
+            
+        }
+        return optLst;
     }
-
-Public String getPagelayoutId(String pgName){
-    pgName  = EncodingUtil.urlEncode(pgName, 'UTF_8');
-    orgAuthentication();
-    String pagLayoutId ; 
-    try {
-        string allLayoutsRestUrl = 'https://'+getUrlPrefix()+'.salesforce.com/services/data/v38.0/tooling/query?q=SELECT+id+FROM+Layout+WHERE+Name=%27' + pgName+'%27+LIMIT+1';
+    
+    Public String getPagelayoutId(String pgName){
+        pgName  = EncodingUtil.urlEncode(pgName, 'UTF_8');
+        orgAuthentication();
+        String pagLayoutId ; 
+        try {
+            string allLayoutsRestUrl = 'https://'+getUrlPrefix()+'.salesforce.com/services/data/v38.0/tooling/query?q=SELECT+id+FROM+Layout+WHERE+Name=%27' + pgName+'%27+LIMIT+1';
             string urlToRequest = allLayoutsRestUrl ;
             HttpResponse resp = null;
             HttpRequest req = new HttpRequest();
-
+            
             req.setMethod('GET');
             req.setEndpoint(urlToRequest);
             req.setHeader('Authorization', 'Bearer ' + accessToken);
@@ -232,109 +234,124 @@ Public String getPagelayoutId(String pgName){
             Http client = new Http();
             resp = client.send(req);
             System.debug(resp.getBody());
-           // If((Integer)((Map<String, Object>)JSON.deserializeUntyped(resp.getBody())).get('size') == 1) {
-                List<Object> mapName =(List<object>)((Map<String, Object>)JSON.deserializeUntyped(resp.getBody())).get('records');
-                Map<String, Object> recNme = (Map<String, Object>)mapName[0];
-                pagLayoutId = (String)recNme.get('Id');
-           // }
-    } catch (Exception e) {
-        System.debug('exception ' + e.getLineNumber());
-         Apexpages.addMessage(new apexpages.message(Apexpages.Severity.ERROR, e.getMessage() + '   ' + e.getLineNumber()));
+            // If((Integer)((Map<String, Object>)JSON.deserializeUntyped(resp.getBody())).get('size') == 1) {
+            List<Object> mapName =(List<object>)((Map<String, Object>)JSON.deserializeUntyped(resp.getBody())).get('records');
+            Map<String, Object> recNme = (Map<String, Object>)mapName[0];
+            pagLayoutId = (String)recNme.get('Id');
+            // }
+        } catch (Exception e) {
+            System.debug('exception ' + e.getLineNumber());
+            Apexpages.addMessage(new apexpages.message(Apexpages.Severity.ERROR, e.getMessage() + '   ' + e.getLineNumber()));
+        }
+        System.debug(pagLayoutId);
+        return pagLayoutId ;
     }
-    System.debug(pagLayoutId);
-    return pagLayoutId ;
-}
-
+    
+    
     public List<String> getPageLayoutName(String objName){
         List<String> layoutLst =  new List<String>();
         orgAuthentication();
         Integer Offset = 0;
         Boolean flag = true;
-
-       try {
+        
+        try {
             if (!Schema.getGlobalDescribe().get(objName).getdescribe().isCUstom()) {
                 
                 while(flag){
-                string allLayoutsRestUrl = 'https://'+getUrlPrefix()+'.salesforce.com/services/data/v38.0/tooling/query?q=SELECT+Name+FROM+Layout+WHERE+TableEnumOrId=%27' + objName + '%27+LIMIT+1+OFFSET+' + Offset;
-                string urlToRequest = allLayoutsRestUrl ;
-                HttpResponse resp = null;
-                HttpRequest req = new HttpRequest();
-                req.setMethod('GET');
-                req.setEndpoint(urlToRequest);
-                req.setHeader('Authorization', 'Bearer ' + accessToken);
-                
-                Http client = new Http();
-                resp = client.send(req);
-                If((Integer)((Map<String, Object>)JSON.deserializeUntyped(resp.getBody())).get('size') == 1) {
-                    List<Object> mapName =(List<object>)((Map<String, Object>)JSON.deserializeUntyped(resp.getBody())).get('records');
-                    Map<String, Object> recNme = (Map<String, Object>)mapName[0];
-                    String pageLayoutName = (String)recNme.get('Name');
-                    layoutLst.add(pageLayoutName);
-                    Offset++;
-                }else {
-                    String pgg = layoutLst[0];
-                layoutLst[0] = layoutLst[layoutLst.size()-1] ;
-                layoutLst[layoutLst.size()-1] = pgg;
-                    flag =false;
-                    break;
-                }
-
-            }
-        } else {
-                
-
-             string allLayoutsRestUrl = 'https://'+getUrlPrefix()+'.salesforce.com/services/data/v45.0/sobjects/'+objName+'/describe/layouts/';
-                    
+                    string allLayoutsRestUrl = 'https://'+getUrlPrefix()+'.salesforce.com/services/data/v38.0/tooling/query?q=SELECT+Name+FROM+Layout+WHERE+TableEnumOrId=%27' + objName + '%27+LIMIT+1+OFFSET+' + Offset;
+                    string urlToRequest = allLayoutsRestUrl ;
                     HttpResponse resp = null;
                     HttpRequest req = new HttpRequest();
                     req.setMethod('GET');
-                    req.setEndpoint(allLayoutsRestUrl);
-                   
+                    req.setEndpoint(urlToRequest);
                     req.setHeader('Authorization', 'Bearer ' + accessToken);
+                    
                     Http client = new Http();
                     resp = client.send(req);
-                    Map<String, Object> mapName =((Map<String, Object>)JSON.deserializeUntyped(resp.getBody()));
-                    List<object> lst =(List<object>) mapName.get('recordTypeMappings');
+                    If((Integer)((Map<String, Object>)JSON.deserializeUntyped(resp.getBody())).get('size') == 1) {
+                        List<Object> mapName =(List<object>)((Map<String, Object>)JSON.deserializeUntyped(resp.getBody())).get('records');
+                        Map<String, Object> recNme = (Map<String, Object>)mapName[0];
+                        String pageLayoutName = (String)recNme.get('Name');
+                        layoutLst.add(pageLayoutName);
+                        Offset++;
+                    }else {
+                        String pgg = layoutLst[0];
+                        layoutLst[0] = layoutLst[layoutLst.size()-1] ;
+                        layoutLst[layoutLst.size()-1] = pgg;
+                        flag =false;
+                        break;
+                    }
+                    
+                }
+            } else {
+                
+                
+                string allLayoutsRestUrl = 'https://'+getUrlPrefix()+'.salesforce.com/services/data/v45.0/sobjects/'+objName+'/describe/layouts/';
+                
+                HttpResponse resp = null;
+                HttpRequest req = new HttpRequest();
+                req.setMethod('GET');
+                req.setEndpoint(allLayoutsRestUrl);
+                
+                req.setHeader('Authorization', 'Bearer ' + accessToken);
+                Http client = new Http();
+                resp = client.send(req);
+                Map<String, Object> mapName =((Map<String, Object>)JSON.deserializeUntyped(resp.getBody()));
+                List<object> lst =(List<object>) mapName.get('recordTypeMappings');
+                if(lst.size() > 1){
                     String  layoutId  =' (';
                     for(object ob : lst){
                         Map<String, Object> lLst = (Map<String, Object>)(ob);
-                       layoutId +=  '\'' + (id)lLst.get('layoutId') + '\', ';
-                      
+                        layoutId +=  '\'' + (id)lLst.get('layoutId') + '\', ';
+                        
                     }
                     layoutId = layoutId.substring(0, layoutId.lastindexOf(',')) + ')';
                     layoutId = EncodingUtil.urlEncode(layoutId, 'UTF-8');
                     flag = false;
-                String  allLayoutsRestUrl1 = 'https://'+getUrlPrefix()+'.salesforce.com/services/data/v38.0/tooling/query?q=SELECT+Name+%2C+Id+FROM+Layout+WHERE+Id+IN+' + layoutId;
-                HttpResponse  resp1 = new HttpResponse();
-                HttpRequest  req1 = new HttpRequest();
-                     
+                    String  allLayoutsRestUrl1 = 'https://'+getUrlPrefix()+'.salesforce.com/services/data/v38.0/tooling/query?q=SELECT+Name+%2C+Id+FROM+Layout+WHERE+Id+IN+' + layoutId;
+                    HttpResponse  resp1 = new HttpResponse();
+                    HttpRequest  req1 = new HttpRequest();
+                    
                     req1.setMethod('GET');
                     req1.setEndpoint(allLayoutsRestUrl1);
                     req1.setHeader('Authorization', 'Bearer ' + accessToken);
                     
                     Http client1 = new Http();
                     resp1 = client1.send(req1);
-                   
+                    
                     try {  
                         List<Object> mapName1 =(List<object>)((Map<String, Object>)JSON.deserializeUntyped(resp1.getBody())).get('records');
                         for (Object obj : mapName1){
                             Map<String, Object> recNme = (Map<String, Object>)(obj);
-                           // pg.pgId = (id)recNme.get('Id');
+                            // pg.pgId = (id)recNme.get('Id');
                             layoutLst.add((String)recNme.get('Name'));
                         }
                     } catch (Exception e) {
                         Apexpages.addMessage(new Apexpages.message(Apexpages.Severity.ERROR, e.getMessage() + '   ' + e.getLineNumber()));
                     }
+                }else {
+                    System.debug('else');
+                    Map<String, List<PageLayout__C>> pgMapForCutomObj = main();
+                    for(String sKey : pgMapForCutomObj.keyset()){
+                        System.debug('#1');
+                    if(sKey.toLowerCase() == objName.toLowerCase()){
+                        System.debug('#2');
+                        for(PageLayOut__C pgl : pgMapForCutomObj.get(sKey)){
+                                layoutLst.add(pgl.Name);
+                        }
+                    }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.debug('Exception ==>> ' + e.getMessage() + ' line Number == >> ' + e.getLineNumber());
+            ApexPages.addMessage(new apexpages.message(Apexpages.Severity.ERROR, e.getMessage() + 'Line Number ==>> ' + e.getLineNumber()));
         }
-       } catch (Exception e) {
-           System.debug('Exception ==>> ' + e.getMessage() + ' line Number == >> ' + e.getLineNumber());
-           ApexPages.addMessage(new apexpages.message(Apexpages.Severity.ERROR, e.getMessage() + 'Line Number ==>> ' + e.getLineNumber()));
-       }
         // String str = pageLayoutName.subString(pageLayoutName.indexOf(objName) + objName.length() + 1);
         // str = EncodingUtil.urlDecode(str, 'UTF-8');
         return layoutLst;
     }
- string getUrlPrefix(){
+    string getUrlPrefix(){
         String baseurl = [SELECT InstanceName FROM Organization].InstanceName;
         return baseurl;
     }
@@ -348,61 +365,78 @@ Public String getPagelayoutId(String pgName){
         public String profileName {get;set;}
         public Map<String, pageLayoutWrapper> prtLayout {get;set;}
     }
-
+    
     public class RecordTypeWrapper{
         public String recordTypeName {get;set;}
     }
-
+    
     public class pageLayoutWrapper{
         public sobject sobj ;
         public List<SelectOption> pgNames {get;set;}
         public String selectedPlName {get;set;}
     }
     
-
-
-//// Insert Section Part //////
+    
+    
+    //// Insert Section Part //////
     public List<Record_Type__C> recordTypeLst ;
     public List<Section__c> sectionLst {get; set;}
     public List <LayoutDescriberHelper.LayoutSection> layoutSections {
         get;
         set;
     }
-    public  void CreateSectionAndField() {
-        sectionLst = new List<Section__c>();
-        recordTypeLst = new List<Record_type__C>();
-        layoutSections = new List<LayoutDescriberHelper.LayoutSection>();
-        initSection();
+    Id jobId;
+    public  Pagereference CreateSectionAndField() {
+            if(jobId != null){
+                AsyncApexJob aap = [SELECT Status FROM AsyncApexJob WHERE Id = :jobId];  
+                if(aap.Status == 'Completed' || aap.Status == 'Failed' || aap.Status == 'Aborted'){ 
+                    jobId = System.enqueueJob(this);
+                    ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.INFO, 'The process is started, you\'ll be mailed when it is completed'));  
+                }
+                else {
+                    ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.Warning, 'The process is already going on. Please wait for sometime, untill it finishes'));  
+                }
+            }else {
+                jobId = System.enqueueJob(this);
+                ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.INFO, 'The process is started, you\'ll be mailed when it is completed'));  
+            }
+            return null;
+       
+        
     }
-
+      List<Section__c> updateSectionLst = new List<Section__c>();
+      
     public void initSection(){
         sectionLst = new List<Section__c>();
         List<String> existingRecordType = new List<String>();
-         try {
+        try {
             // recordTypeLst = [SELECT Name, recordTypeId__c, Object__c, profile__r.Name, Object__R.Name, (SELECT id, name FROM Pagelayouts__r) FROM Record_Type__c];
             
             for (PageLayout__c rt : [SELECT PageLayoutid__C, Record_Type__r.recordTypeId__C, Profile__r.Name, Object__r.Developer_name__C, Name FROM Pagelayout__C ]) {
-               
+                
                 if (!existingRecordType.contains(rt.Name)) {
-                     existingRecordType.add(rt.name);
+                    existingRecordType.add(rt.name);
                     layoutSections = LayoutDescriberHelper.describeSectionWithFields(rt.record_Type__r.RecordTypeId__C, rt.Object__r.Developer_name__C, rt.profile__r.Name);
                     initSectionAndField(rt.id, rt.Object__R.Developer_name__C);
-                   
+                    
                 }
             }
-             insertSectionAndField();
-         } catch (Exception e) {
-             APexpages.addMessage(new Apexpages.message(Apexpages.Severity.ERROR, e.getMessage() + '  ' + e.getCause() + '   ' + e.getLineNumber()));
-         }
+            
+            insertSectionAndField();
+            updateSectionLst(updateSectionLst);
+        } catch (Exception e) {
+           System.debug(e.getMessage() + 'at line  ' + e.getLineNumber());
+        }
     }
 
     public void initSectionAndField(String s,  String obj){
-        
         List<String> fldlst;
         List<String> existingSectionLst = new list<String>();
+        Map<String, Section__C> sectionsMap = new Map<String, Section__c>();
         try {
             for (Section__C sec  : [SELECT Name, PageLayout__r.id FROM Section__C]) {
                 existingSectionLst.add(sec.Name + sec.PageLayout__r.id);
+                sectionsMap.put(sec.Name + sec.PageLayout__r.id, sec);
             }
             for (LayoutDescriberHelper.LayoutSection section : layoutSections) {
                 Section__c sec  = new Section__C();
@@ -411,32 +445,35 @@ Public String getPagelayoutId(String pgName){
                 sec.pageLayout__C = s;
                 sec.ObjectName__c  = obj;
                 fldLst = new List<String>();
-
+                
                 for (LayoutDescriberHelper.LayoutField fld : Section.layoutFields) {
-                    if(fld.ApiName == 'BillingAddress'){
+                    if(fld.ApiName.toLowerCase() == 'BillingAddress'){
                         fldLst.add('BillingStreet');
                         fldLst.add('BillingCity');
                         fldLst.add('BillingState');
                         fldLst.add('BillingPostalCode');
                         fldLst.add('BillingCountry');
-                    } else if(fld.ApiName == 'ShippingAddress'){
-                            fldLst.add('ShippingStreet');
-                            fldLst.add('ShippingCity');
-                            fldLst.add('ShippingState');
-                            fldLst.add('ShippingPostalCode');
-                            fldLst.add('ShippingCountry');
-                    } else if (fld.ApiName == 'MailingAddress') {
-                            fldLst.add('MailingStreet');
-                            fldLst.add('MailingCity');
-                            fldLst.add('MailingState');
-                            fldLst.add('MailingPostalCode');
-                            fldLst.add('MailingCountry');
-                    } else if(fld.ApiName == 'OtherAddress') {
-                            fldLst.add('OtherStreet');
-                            fldLst.add('OtherCity');
-                            fldLst.add('OtherState');
-                            fldLst.add('OtherPostalCode');
-                            fldLst.add('OtherCountry');
+                    } else if(fld.ApiName.toLowerCase() == 'ShippingAddress'){
+                        fldLst.add('ShippingStreet');
+                        fldLst.add('ShippingCity');
+                        fldLst.add('ShippingState');
+                        fldLst.add('ShippingPostalCode');
+                        fldLst.add('ShippingCountry');
+                    } else if (fld.ApiName.toLowerCase() == 'MailingAddress') {
+                        fldLst.add('MailingStreet');
+                        fldLst.add('MailingCity');
+                        fldLst.add('MailingState');
+                        fldLst.add('MailingPostalCode');
+                        fldLst.add('MailingCountry');
+                    } else if(fld.ApiName.toLowerCase() == 'OtherAddress') {
+                        fldLst.add('OtherStreet');
+                        fldLst.add('OtherCity');
+                        fldLst.add('OtherState');
+                        fldLst.add('OtherPostalCode');
+                        fldLst.add('OtherCountry');
+                    } else if (fld.ApiName.toLowerCase() == 'name' && obj.toLowerCase() == 'contact') {
+                        fldLst.add('LastName');
+                        fldLst.add('FirstName');
                     } else {
                         fldLst.add(fld.ApiName);
                     }
@@ -444,23 +481,122 @@ Public String getPagelayoutId(String pgName){
                 }
                 sec.fields_developer_Name__c = String.join(fldLst, '; ');
                 if(!existingSectionLst.contains(section.Name +s)){
-                        sectionLst.add(sec);
+                    sectionLst.add(sec);
+                }else {
+                    System.debug(sec);
+                    sec.id = sectionsMap.get(section.Name +s).id;
+                   
+                      updateSectionLst.add(sec);
                 }
             }
+            
         } catch (Exception e) {
-                Apexpages.addMessage(new apexpages.message(Apexpages.Severity.ERROR, e.getMessage() + ' line ==>  ' + e.getLineNumber()));
-            }
+           System.debug(e.getMessage() + 'at line  ' + e.getLineNumber());
+        }
     }
+    
 
+    public void updatesectionLst(List<Section__c> secLst){
+
+        try {
+           if (secLst != null) {
+                dataBase.update(secLst, false);
+           }
+        } catch (Exception e) {
+           System.debug(e.getMessage() + 'at line  ' + e.getLineNumber());
+        }
+    }
     public void insertSectionAndField(){
         try {
-          if (sectionLst != null) {
+            if (sectionLst != null) {
                 Database.insert(sectionLst, false);
-                 ApexPages.addMessage(new ApexPages.Message( ApexPages.Severity.CONFIRM,' Sections And Field  Successfully inserted'));
-          }
+               
+            }
         } catch (Exception e) {
-            Apexpages.addMessage(New Apexpages.message(Apexpages.Severity.ERROR, e.getMessage() + 'Line ==> ' + e.getLineNumber()));
+           System.debug(e.getMessage() + 'at line  ' + e.getLineNumber());
             
+        }
+    }
+
+    public void execute(QueueableContext context){  
+        sectionLst = new List<Section__c>();
+        recordTypeLst = new List<Record_type__C>();
+        layoutSections = new List<LayoutDescriberHelper.LayoutSection>();
+        initSection();
+    }
+
+    public Pagereference refresh(){
+        try {
+            id ids  = Apexpages.currentPage().getparameters().get('jobId');
+        AsyncApexJob aap = [SELECT Status FROM AsyncApexJob WHERE Id = :ids];  
+
+            if(aap.Status == 'Completed' || aap.Status == 'Failed' || aap.Status == 'Aborted'){ 
+                isPageLayoutInserted = true;
+            }
+            else {
+                isPageLayoutInserted =  false;
+                ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.Warning, 'The process is already going on. Please wait for sometime, untill it finishes'));  
+            }
+        } catch (Exception e) {
+            Apexpages.addMessage(new apexpages.message(Apexpages.Severity.ERROR, e.getMessage() + e.getLineNumber()));
+        }
+        return null;
+    }
+
+
+
+    
+    public  Map<String, List<PageLayout__C>> main(){
+        Map<String, List<PageLayout__C>> pgLayouts = new Map<String, List<PageLayout__C>>();
+        String epURL1 = 'https://' + getUrlPrefix() + '.salesforce.com/services/data/v45.0/tooling/query?q=SELECT+Name+FROM+Layout';
+        Http h = new HTTP();
+        HTTPRequest req = new HTTPRequest();
+        req.setMethod('GET');
+        req.setHeader('Authorization', 'Bearer ' + accessToken);
+        req.setEndpoint(epURL1);
+        HTTPResponse res = h.send(req);
+        String resbody = res.getBody();
+        Map<String, Object> map1 = (Map<String, Object>) JSON.deserializeUntyped(resbody);
+        List<Object> list1 = (List<Object>) map1.get('records');
+
+        for(Integer i = list1.size()-1; i > 100; i--){
+            String u = (String)((Map<String, Object>)((Map<String, Object>)list1[i]).get('attributes')).get('url');
+            Http hI = new HTTP();
+            HTTPRequest reqI = new HTTPRequest();
+            reqI.setMethod('GET');
+            reqI.setHeader('Authorization', 'Bearer ' + accessToken);
+            reqI.setEndpoint('https://' + getUrlPrefix() + '.salesforce.com' + u);
+            HTTPResponse resI = h.send(reqI);
+            String resbodyI = resI.getBody();
+            Object obj = (Object) JSON.deserializeUntyped(resbodyI);
+            if(obj instanceof List<Object>){
+                
+            }else{
+                Map<String, Object> map1I = (Map<String, Object>) obj;
+                String fName = (String) map1I.get('FullName');
+                System.debug(fName);
+            	initpgLayouts(fName, (String) map1I.get('Id'), pgLayouts);
+            }
+            
+        }
+        return pgLayouts;
+    }
+    
+    public  void initpgLayouts(String fName, String ids, Map<String, List<PageLayout__C>> pl){
+        String objName = fName.substringBefore('-');
+        String pName = fName.substringAfter('-');
+        if(pl.containsKey(objName)){
+            PageLayout__C pg = new PageLayout__C();
+            pg.Name = pName;
+            pg.PageLayoutId__C  = ids;
+            pl.get(objName).add(pg);
+        }else{
+            List<PageLayout__C> pN = new List<PageLayout__C>();
+            PageLayout__C pg = new PageLayout__C();
+            pg.Name = pName;
+            pg.PageLayoutId__C  = ids;
+            pN.add(pg);
+            pl.put(objName, pN);
         }
     }
 }

@@ -26,7 +26,8 @@ public class PaginationComponentController {
     public Boolean isSelectAll {get;set;}
     
     public Integer selectedTotal{get;set;}
-    
+
+    Map<String, Schema.SObjectType> initSchemaMap = Schema.getGlobalDescribe();
     // initialized to DateTime.now() when setCon is initiallized
     @testVisible DateTime setControllerBirthday {get; set;} 
     
@@ -98,7 +99,7 @@ public class PaginationComponentController {
         
         id uId = apexpages.currentPage().getParameters().get('userId');
         try{
-            user= database.query('SELECT id, first_Name__C, last_Name__c, name, Email__C, Profile__C FROM Site_User__c Where id = :uId limit 1'); //isCreate, isTable, isGlobalTable, isTaskEvent, isHome
+            user= database.query('SELECT id, first_Name__C, last_Name__c, name, Email__C, Profile_Name__r.Name FROM Site_User__c Where id = :uId limit 1'); //isCreate, isTable, isGlobalTable, isTaskEvent, isHome
             customUser= UserInfo__c.getInstance(user.Email__C);
 
 
@@ -115,7 +116,6 @@ public class PaginationComponentController {
             dummyquery = query;
         }
         }catch(Exception e){
-            System.debug(e.getLineNumber());
             user = new Site_User__c();
             customUser =new UserInfo__C();
         }
@@ -127,7 +127,6 @@ public class PaginationComponentController {
     }
     
     public void setquery(String q){
-        System.debug(q);
         if(query == null || query != q){
             query = q;
         }
@@ -197,8 +196,8 @@ public class PaginationComponentController {
     
     public List<String> getNameUniqueField(String objType)
     {  
-        Map<String, Schema.SObjectType> schemaMap = Schema.getGlobalDescribe();
-        Schema.SObjectType leadSchema = schemaMap.get(objType);
+        
+        Schema.SObjectType leadSchema = initSchemaMap.get(objType);
         List<String> strResult = new List<String>();
         //Schema.sObjectType objType = obj.getSObjectType();
         Schema.DescribeSObjectResult ObjResult =  LeadSchema.getDescribe();
@@ -259,11 +258,22 @@ public class PaginationComponentController {
         updateQuery = false;
     }
     
+    public void adjustQueryForTaskAndEvent(){
+        String str = String.join(taskRelatedObjList.taskRelatedObject, ', ');
+        str += ', ';
+       query  = 'SELECT ' +  str + query.substring(query.indexOf('SELECT') + 6) ;
+        System.debug(query);
+    }
     ApexPages.StandardSetController setCtrl{get{
+
         if(setCtrl == null || updateQuery){
-            try{
+            try{ 
+                if(objName.toLowerCase() == 'task__c' || objName.toLowerCase() == 'event__c'){
+                    adjustQueryForTaskAndEvent();
+                }
                 if(queryType == 'SOQL'){
                     adjustQueryForSoql();
+                    
                     //ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Info, query));
                     setCtrl = new ApexPages.StandardSetController(Database.getQueryLocator(query));
                 }else if(queryType == 'SOSL'){
@@ -335,7 +345,7 @@ public class PaginationComponentController {
     public List<RTInfo> recTypeInfoLst {get;set;}
     
     public void initRecTypeInfoLst(){
-        List<Schema.RecordTypeInfo> rtiLst = Schema.getGlobalDescribe().get(objName).getDescribe().getRecordTypeInfos();
+        List<Schema.RecordTypeInfo> rtiLst = initSchemaMap.get(objName).getDescribe().getRecordTypeInfos();
         recTypeInfoLst = new List<RTInfo>();
         
         for (RecordTypeInfo rti : rtiLst) {
@@ -363,7 +373,7 @@ public class PaginationComponentController {
     }
 
     public Id getRecordTypeIdFromRecordId(Id rid){
-        List<Schema.RecordTypeInfo> rtiLst = Schema.getGlobalDescribe().get(objName).getDescribe().getRecordTypeInfos();
+        List<Schema.RecordTypeInfo> rtiLst = initSchemaMap.get(objName).getDescribe().getRecordTypeInfos();
         if (rtiLst.size() == 1) {
             return rtiLst[0].getRecordTypeId();
         }else{
@@ -389,8 +399,8 @@ public class PaginationComponentController {
             customUser.isHome__c = false;
             customUser.isTable__c = false;
             customUser.isTask__c = false;
-            List<LayoutDescriberHelper.LayoutSection> layoutSections  = LayoutDescriberHelper.describeSectionWithFields(getRecordTypeIdFromRecordId(recId), objName, profileName);
-            Cache.Org.put('local.SitePartition.layoutsections' , layoutSections);
+            //List<LayoutDescriberHelper.LayoutSection> layoutSections  = LayoutDescriberHelper.describeSectionWithFields(getRecordTypeIdFromRecordId(recId), objName, profileName);
+           // Cache.Org.put('local.SitePartition.layoutsections' , layoutSections);
             update customUser;
        } catch (Exception e) {
            Apexpages.addMessage(new Apexpages.message(Apexpages.Severity.ERROR, e.getMessage()));
@@ -609,7 +619,7 @@ public class PaginationComponentController {
                 String msg ='Changed ';
                 for(String fld : fldMap.keySet()){
                     
-                    if(Schema.getGlobalDescribe().get(objName).getDescribe().fields.getMap().get(fld).getDescribe().isUpdateable()){
+                    if(initSchemaMap.get(objName).getDescribe().fields.getMap().get(fld).getDescribe().isUpdateable()){
                         if(mapHoldingRecordList.get((id)sId.get('id')).record.get(fld)!=null && sId.get(fld) !=null){
                             if(!mapHoldingRecordList.get((id)sId.get('id')).record.get(fld).equals(sId.get(fld))){
                                 
@@ -666,8 +676,7 @@ public class PaginationComponentController {
     
     public String getReferenceFieldApiName(){
         String fldApiName = '';
-        map<string, schema.SObjectType> mp = schema.getGlobalDescribe();
-        schema.DescribeSObjectResult sdescribe = mp.get(objName.toLowerCase()).getDescribe();
+        schema.DescribeSObjectResult sdescribe = initSchemaMap.get(objName.toLowerCase()).getDescribe();
         List<Schema.ChildRelationship> childdesc = sdescribe.getChildRelationships();
         for(Schema.ChildRelationship reference : childdesc) {
             if(reference.getChildSobject().getDescribe().getName() == 'siteHIstory__c')
@@ -686,6 +695,7 @@ public class PaginationComponentController {
     public Accessibility accessibility2 {get;set;}
     public List<CheckPermission.FieldName> permittedfieldList {get;set;}
     public String objectName {get;set;}
+    public List<String> objKey {get; set;}
     @testVisible String objectNameWithNamespace;
     @testVisible String namespacePrefix;
     
@@ -694,9 +704,10 @@ public class PaginationComponentController {
         try {
               Attachment at ;
            try {
+               System.debug(profileName + objName);
              at = [select name, body from attachment WHERE Name = : profileName + objName LIMIT 1];
            } catch (Exception e) {
-               Apexpages.addMessage(new Apexpages.message(Apexpages.Severity.ERROR, 'Profile Permission is not available. Please contact your Administrator'));
+               Apexpages.addMessage(new Apexpages.message(Apexpages.Severity.ERROR, 'Profile Permission is not available. Please contact your Administrator') );
                return;
            }
             String str = at.Body.toString();
@@ -709,21 +720,10 @@ public class PaginationComponentController {
                 Apexpages.addMessage(new Apexpages.message(Apexpages.Severity.INFO, 'Profile Permission data is fetching. Please wait....'));
             }
             List<String> fldLst = new List<String>();
-            Object__C obj;
-            if (queryType == 'SOQL') {
-                obj = [SELECT fields_developer_Name__c FROM Object__C WHERE developer_name__c = :objName AND view__c = 'All Records View'];
-            }else {
-                obj = [SELECT fields_developer_Name__c FROM Object__C WHERE developer_name__c = :objName AND view__c = 'Search Records View'];
-            }
-           
-            for (String s : (obj.fields_developer_Name__c).split('; ')) {
-                 fldLst.add(s.toLowerCase());
-            }
-
+            objKey = new List<String>();
+            objKey.addAll(access.accessibility1.objectAccessibility.keySet());
             permittedfieldList = new List<CheckPermission.FieldName>();
-            System.debug(fieldLst);
             for (CheckPermission.FieldName fld : access.permittedfieldList) {
-                System.debug(fld.fieldNameWithoutNamespace);
               if (fieldLst.contains(fld.fieldNameWithoutNamespace)) {
 
                   permittedfieldList.add(fld);
@@ -733,111 +733,7 @@ public class PaginationComponentController {
         } catch (Exception e) {
             Apexpages.addMessage(new Apexpages.message(Apexpages.Severity.ERROR, e.getMessage() + ' Line Number== >> ' + e.getLineNumber()));
         }
-
-        //objAccessibiblity =  new Accessibility();
-        // profileName='installer';
-        //Boolean namespaceExists = initObjectAndNameSpacePrefix();
-        //if(namespaceExists){
-            //initFields();
-            //initRecords();
-            //initaccessibility1();
-            //initaccessibility2();
-        //}else{
-            //initFieldsWithoutNameSpace();
-            //initaccessibility1WithoutNameSpace();
-            //initaccessibility2WithoutNameSpace();
-            
-        //}
-        //objAccessibiblity= accessibility1;
-    }
-    
-    // @testVisible void initaccessibility1(){
-    //     accessibility1 = new Accessibility();
-    //     accessibility1.Email = '';
-    //     accessibility1.Profile = profileName;
-    //     initObjectAccessibility(accessibility1);
-    //     initFieldAccessibility(accessibility1, objectNameWithNamespace);
-    // }
-    
-    // @testVisible void initaccessibility2(){
-    //     accessibility2 = new Accessibility();
-    //     accessibility2.Email = '';
-    //     accessibility2.Profile = profileName;
-    //     initObjectAccessibility(accessibility2);
-    //     initFieldAccessibility(accessibility2, objectNameWithNamespace);
-    // }
-    
-    // @testVisible void initObjectAccessibility(Accessibility accessibility){
-    //     list<ObjectPermissions> objper = [SELECT Id,SObjectType, PermissionsRead, PermissionsEdit, PermissionsCreate, permissionsDelete 
-    //                                       FROM ObjectPermissions 
-    //                                       WHERE parentId IN ( SELECT id 
-    //                                                          FROM permissionset 
-    //                                                          WHERE PermissionSet.Profile.Name = :accessibility.Profile)]; 
-    //     for(ObjectPermissions op : objper){
-    //         Accessibility.ObjectAccess objaccess = new Accessibility.ObjectAccess();
-    //         objaccess.hasReadAccess = op.PermissionsRead;
-    //         objaccess.hasEditAccess = op.PermissionsEdit;
-    //         objaccess.hasCreateAccess = op.PermissionsCreate;
-    //         objaccess.hasdeleteAccess = op.permissionsDelete;
-    //         accessibility.objectAccessibility.put((string)op.SObjectType.toLowerCase(), objaccess);
-    //     }
-    // }
-    
-    // @testVisible void initFieldAccessibility(Accessibility accessibility, String objectNameWithNamespace){
-    //     list<FieldPermissions> fldper =  [SELECT Id,Field, PermissionsRead, PermissionsEdit 
-    //                                       FROM FieldPermissions 
-    //                                       WHERE parentId IN (SELECT id 
-    //                                                          FROM permissionset 
-    //                                                          WHERE PermissionSet.Profile.Name = :accessibility.Profile)
-    //                                       AND sObjectType = :objectNameWithNamespace]; 
-    //     for(FieldPermissions fp:fldper){
-    //         Accessibility.FieldAccess fldaccess=new Accessibility.FieldAccess();
-    //         fldaccess.hasReadAccess = fp.PermissionsRead;
-    //         fldaccess.hasEditAccess = fp.PermissionsEdit;
-    //         accessibility.Fieldaccessibility.put(fp.Field, fldaccess);
-    //     }
-    //     adjustFieldAccessibilityMap(accessibility.Fieldaccessibility);
-    // }
-    
-    // @testVisible void initFields (){
-    //     permittedfieldList = new List<FieldName>();
-        
-    //     String s = objectNameWithNamespace + '.' + namespacePrefix + '__';
-    //     for(String fld: getfieldLst()){
-    //         FieldName fn;
-    //         if(objName == 'task__c' || objName == 'event__c' ){
-    //             if(!taskRelatedObjList.taskRelatedObject.contains(fld.toLowerCase())){ 
-    //                 fn = new FieldName(fld.toLowerCase(), s.toLowerCase() + fld.toLowerCase());
-    //                 permittedfieldList.add(fn);
-    //             }
-    //         }else {
-    //             fn = new FieldName(fld.toLowerCase(), s.toLowerCase() + fld.toLowerCase());
-    //             permittedfieldList.add(fn);
-    //         }
-            
-    //     }
-    // }
-
-    // @testVisible void adjustFieldAccessibilityMap(Map<String, Accessibility.FieldAccess> fieldAccessMap){
-    //     for(FieldName fld: permittedfieldList){
-    //         Accessibility.FieldAccess fldaccess=new Accessibility.FieldAccess();
-            
-    //         if(!fieldAccessMap.containsKey(fld.fieldNameWithNamespace) && !getRequiredFields().contains(fld.fieldNameWithoutNamespace)){
-    //             fldaccess.hasReadAccess = false;
-    //             fldaccess.hasEditAccess = false;
-    //             fieldAccessMap.put(fld.fieldNameWithNamespace, fldaccess);
-                
-    //         }else{
-                
-    //             fldaccess.hasReadAccess = true; // Undefined???????????????
-    //             fldaccess.hasEditAccess = true; // Undefined???????????????
-    //             fieldAccessMap.put(fld.fieldNameWithNamespace, fldaccess);
-    //         }
-    //     }
-    //}
-    
-    //  
-    
+    }   
     
     public Pagereference createNew(){
         customUser.isCreate__C = true;

@@ -20,7 +20,7 @@ public class TaskRelatedListClass {
             taskRelatedObject = new List<string>();
             taskRelatedObject.add('account__c');
             taskRelatedObject.add('contact__c');
-            taskRelatedObject.add('idt_products__c');
+            taskRelatedObject.add('idt_product__c');
             userId = '';
             isTable = false;
             isGlobalTable = false;

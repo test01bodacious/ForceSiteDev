@@ -38,7 +38,7 @@ private class DetailPageComponentController_Test {
       @isTest
     public static void setrecId(){
         AccountInsert a=new AccountInsert();
-        site_User__c site=new Site_User__c(Name='Aniket',Email__c='aniketraj8493@gmail.com',Profile__c='System Administrator');
+        site_User__c site=new Site_User__c(Name='Aniket',Email__c='aniketraj8493@gmail.com',Profile_Name__C='System Administrator');
         insert site;
         Test.startTest();
         DetailPageComponentController dpagecontroller=new DetailPageComponentController(); 
@@ -64,7 +64,7 @@ private class DetailPageComponentController_Test {
     @isTest(SeeAllData=true)
     public static void initRecord(){
          AccountInsert a=new AccountInsert();
-         site_User__c site=new Site_User__c(Name='Aniket',Email__c='aniketraj8493@gmail.com',Profile__c='System Administrator');
+         site_User__c site=new Site_User__c(Name='Aniket',Email__c='aniketraj8493@gmail.com',Profile_Name__C='System Administrator');
          insert site;
          Test.startTest();
           DetailPageComponentController dpagecontroller=new DetailPageComponentController(); 

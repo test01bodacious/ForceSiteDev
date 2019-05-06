@@ -1,4 +1,4 @@
-public class ProfilePermissionPageController {
+public class ProfilePermissionPageController implements Queueable, Database.AllowsCallouts {
     
     List<Record_Type__c> pgLst;
     Map<String, LIST<Record_Type__c>> pgMap;
@@ -140,7 +140,28 @@ public  String accessToken;
             
     }
 
+id jobId;
     public  Pagereference goToPageLayOutPage(){
+        if(jobId != null){
+                AsyncApexJob aap = [SELECT Status FROM AsyncApexJob WHERE Id = :jobId];  
+                if(aap.Status == 'Completed' || aap.Status == 'Failed' || aap.Status == 'Aborted'){ 
+                    jobId = System.enqueueJob(this);
+                    ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.INFO, 'The process is started, you\'ll be mailed when it is completed'));  
+                }
+                else {
+                    ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.Warning, 'The process is already going on. Please wait for sometime, untill it finishes'));  
+                }
+            }else {
+                jobId = System.enqueueJob(this);
+                ApexPages.addMessage(new ApexPages.message(ApexPages.Severity.INFO, 'The process is started, you\'ll be mailed when it is completed'));  
+            }
+        Pagereference pgr = new Pagereference('/apex/PageLayouts');
+        pgr.getParameters().put('jobId' , jobId);
+       return pgr;
+    }
+
+
+public void pgaelayoutInsertionForbatch(){
         List<PageLayout__c> toInsertPageLayout  =  new List<PageLayout__c>();
         List<String> checkForPageLayout = new List<String>();
         String obj = '';
@@ -203,10 +224,7 @@ public  String accessToken;
         } catch (Exception e) {
              System.debug('Exception in class: ' + String.valueOf(this).split(':')[0] + ' === Message: ' + e.getMessage() + ' === At Line: ' + e.getLineNumber());
         }
-        Pagereference pgr = new Pagereference('/apex/PageLayouts');
-       return pgr;
-    }
-
+}
 
 public void initPGLForWithoutRcTypeObj(Map<String, Object__C> objMap, List<PageLayout__C> pglList){
     System.debug(objMap);
@@ -228,6 +246,7 @@ public void initPGLForWithoutRcTypeObj(Map<String, Object__C> objMap, List<PageL
 
 }
     public List<PageLayout> getPageLayoutName(String objName){
+        System.debug(Limits.getCallouts());
         List<PageLayout> layoutLst =  new List<PageLayout>();
         orgAuthentication();
         Integer Offset = 0;
@@ -265,38 +284,40 @@ public void initPGLForWithoutRcTypeObj(Map<String, Object__C> objMap, List<PageL
             }
         }else {
 
-             string allLayoutsRestUrl = 'https://'+getUrlPrefix()+'.salesforce.com/services/data/v45.0/sobjects/'+objName+'/describe/layouts/';
-                    
-                    HttpResponse resp = null;
-                    HttpRequest req = new HttpRequest();
-                    req.setMethod('GET');
-                    req.setEndpoint(allLayoutsRestUrl);
-                   
-                    req.setHeader('Authorization', 'Bearer ' + accessToken);
-                    Http client = new Http();
-                    resp = client.send(req);
-                    Map<String, Object> mapName =((Map<String, Object>)JSON.deserializeUntyped(resp.getBody()));
-                    List<object> lst =(List<object>) mapName.get('recordTypeMappings');
-                    String  layoutId  =' (';
-                    for(object ob : lst){
-                        Map<String, Object> lLst = (Map<String, Object>)(ob);
-                       layoutId +=  '\'' + (id)lLst.get('layoutId') + '\', ';
-                      
-                    }
-                    layoutId = layoutId.substring(0, layoutId.lastindexOf(',')) + ')';
-                    layoutId = EncodingUtil.urlEncode(layoutId, 'UTF-8');
-                    flag = false;
+            string allLayoutsRestUrl = 'https://'+getUrlPrefix()+'.salesforce.com/services/data/v45.0/sobjects/'+objName+'/describe/layouts/';
+            HttpResponse resp = null;
+            HttpRequest req = new HttpRequest();
+            req.setMethod('GET');
+            req.setEndpoint(allLayoutsRestUrl);
+            
+            req.setHeader('Authorization', 'Bearer ' + accessToken);
+            Http client = new Http();
+            resp = client.send(req);
+            Map<String, Object> mapName =((Map<String, Object>)JSON.deserializeUntyped(resp.getBody()));
+            List<object> lst =(List<object>) mapName.get('recordTypeMappings');
+            
+            if (lst.size() > 1) {
+                String  layoutId  =' (';
+                for(object ob : lst){
+                    Map<String, Object> lLst = (Map<String, Object>)(ob);
+                    layoutId +=  '\'' + (id)lLst.get('layoutId') + '\', ';
+                }
+
+                layoutId = layoutId.substring(0, layoutId.lastindexOf(',')) + ')';
+                layoutId = EncodingUtil.urlEncode(layoutId, 'UTF-8');
+                flag = false;
+
                 String  allLayoutsRestUrl1 = 'https://'+getUrlPrefix()+'.salesforce.com/services/data/v38.0/tooling/query?q=SELECT+Name+%2C+Id+FROM+Layout+WHERE+Id+IN+' + layoutId;
                 HttpResponse  resp1 = new HttpResponse();
                 HttpRequest  req1 = new HttpRequest();
-                     
+                        
                     req1.setMethod('GET');
                     req1.setEndpoint(allLayoutsRestUrl1);
                     req1.setHeader('Authorization', 'Bearer ' + accessToken);
                     
                     Http client1 = new Http();
                     resp1 = client1.send(req1);
-                   
+                    
                     try {  
                         List<Object> mapName1 =(List<object>)((Map<String, Object>)JSON.deserializeUntyped(resp1.getBody())).get('records');
                         for (Object obj : mapName1){
@@ -307,16 +328,92 @@ public void initPGLForWithoutRcTypeObj(Map<String, Object__C> objMap, List<PageL
                             layoutLst.add(pg);
                         }
                     } catch (Exception e) {
-                        Apexpages.addMessage(new Apexpages.message(Apexpages.Severity.ERROR, e.getMessage() + '   ' + e.getLineNumber()));
+
                     }
+            } else {
+                System.debug('else');
+                Map<String, List<PageLayout__C>> pgMapForCutomObj = main();
+                for(String sKey : pgMapForCutomObj.keyset()){
+                    System.debug('#1');
+                   if(sKey.toLowerCase() == objName.toLowerCase()){
+                       System.debug('#2');
+                      for(PageLayOut__C pgl : pgMapForCutomObj.get(sKey)){
+                          System.debug('#3');
+                            PageLayout pg = new PageLayout();
+                            pg.Name = pgl.Name;
+                            pg.pgId = pgl.PageLayoutId__C;
+                            layoutLst.add(pg);
+                      }
+                   }
+                }
+                
+            }
             
         }
-       
-        // String str = pageLayoutName.subString(pageLayoutName.indexOf(objName) + objName.length() + 1);
-        // str = EncodingUtil.urlDecode(str, 'UTF-8');
         return layoutLst;
     }
 
+
+    public  Map<String, List<PageLayout__C>> main(){
+        Map<String, List<PageLayout__C>> pgLayouts = new Map<String, List<PageLayout__C>>();
+        String epURL1 = 'https://' + getUrlPrefix() + '.salesforce.com/services/data/v45.0/tooling/query?q=SELECT+Name+FROM+Layout';
+        Http h = new HTTP();
+        HTTPRequest req = new HTTPRequest();
+        req.setMethod('GET');
+        req.setHeader('Authorization', 'Bearer ' + accessToken);
+        req.setEndpoint(epURL1);
+        HTTPResponse res = h.send(req);
+        String resbody = res.getBody();
+        Map<String, Object> map1 = (Map<String, Object>) JSON.deserializeUntyped(resbody);
+        List<Object> list1 = (List<Object>) map1.get('records');
+
+        for(Integer i = list1.size()-1; i > 110; i--){
+            
+            if(Limits.getCallouts() == 90)
+                break;
+            String u = (String)((Map<String, Object>)((Map<String, Object>)list1[i]).get('attributes')).get('url');
+            Http hI = new HTTP();
+            HTTPRequest reqI = new HTTPRequest();
+            reqI.setMethod('GET');
+            reqI.setHeader('Authorization', 'Bearer ' + accessToken);
+            reqI.setEndpoint('https://' + getUrlPrefix() + '.salesforce.com' + u);
+            HTTPResponse resI = h.send(reqI);
+            String resbodyI = resI.getBody();
+            Object obj = (Object) JSON.deserializeUntyped(resbodyI);
+            if(obj instanceof List<Object>){
+                
+            }else{
+                Map<String, Object> map1I = (Map<String, Object>) obj;
+                String fName = (String) map1I.get('FullName');
+                System.debug(fName);
+            	initpgLayouts(fName, (String) map1I.get('Id'), pgLayouts);
+            }
+            
+        }
+        return pgLayouts;
+    }
+    
+    public  void initpgLayouts(String fName, String ids, Map<String, List<PageLayout__C>> pl){
+        String objName = fName.substringBefore('-');
+        String pName = fName.substringAfter('-');
+        if(pl.containsKey(objName)){
+            PageLayout__C pg = new PageLayout__C();
+            pg.Name = pName;
+            pg.PageLayoutId__C  = ids;
+            pl.get(objName).add(pg);
+        }else{
+            List<PageLayout__C> pN = new List<PageLayout__C>();
+            PageLayout__C pg = new PageLayout__C();
+            pg.Name = pName;
+            pg.PageLayoutId__C  = ids;
+            pN.add(pg);
+            pl.put(objName, pN);
+        }
+    }
+     
+    public void execute(QueueableContext context){  
+       pgaelayoutInsertionForbatch();
+    } 
     public class PageLayout{
         Public String Name;
         public id pgId ;
